@@ -8,6 +8,7 @@ import java.util.Random;
 
 import uk.ac.ucl.protecs.behaviours.*;
 import uk.ac.ucl.protecs.behaviours.diseaseProgression.DummyWaterborneDiseaseProgressionFramework;
+import uk.ac.ucl.protecs.behaviours.diseaseProgression.HIVDiseaseProgressionFramework;
 import uk.ac.ucl.protecs.behaviours.diseaseProgression.DummyNonCommunicableDiseaseProgressionFramework;
 import uk.ac.ucl.protecs.objects.diseases.Disease;
 import uk.ac.ucl.protecs.objects.hosts.Person;
@@ -60,6 +61,8 @@ public class WorldBankCovid19Sim extends SimState {
 	public DummyWaterborneDiseaseProgressionFramework dummyWaterborneFramework = null;
 	public DummyInfectiousDiseaseProgressionFramework dummyInfectiousFramework = null;
 	public CholeraDiseaseProgressionFramework choleraFramework = null;
+	public HIVDiseaseProgressionFramework hivFramework = null;
+	
 	public Demography demographyFramework = null;
 	public Params params = null;
 	public boolean lockedDown = false;
@@ -114,7 +117,7 @@ public class WorldBankCovid19Sim extends SimState {
 	// Create a enum list of diseases modelled currently, these will be used to categorise any infections a person may get over the course of the simulation.
 	public enum DISEASE{
 		DUMMY_NCD("DUMMY_NCD"), DUMMY_INFECTIOUS("DUMMY_INFECTIOUS"), DUMMY_WATERBORNE("DUMMY_WATERBORNE"), COVID("COVID-19"), COVIDSPURIOUSSYMPTOM("COVID-19_SPURIOUS_SYMPTOM"),
-		CHOLERA("CHOLERA");
+		CHOLERA("CHOLERA"), HIV("HIV");
 
         public String key;
      
@@ -134,6 +137,10 @@ public class WorldBankCovid19Sim extends SimState {
         		return COVIDSPURIOUSSYMPTOM;
         	case "CHOLERA":
         		return CHOLERA;
+        	case "HIV":
+        		return HIV;
+        	case "HIV/AIDS":
+        		return HIV;
         	default:
         		throw new IllegalArgumentException();
         	}
@@ -228,6 +235,10 @@ public class WorldBankCovid19Sim extends SimState {
 		other_infections = new ArrayList <Disease> ();
 		// load in the infections in humans
 		loadInfectionsInHumans.seed_infections_in_humans(this);
+		// load in infections by prevalence if using
+		if (this.params.prevalenceLineList != null) {
+			loadEndemicConditions.seed_endemic_conditions(this);
+		}
 		
 		// ======================================================= cholera set up ====================================================================
 		// set up things needed to model water
