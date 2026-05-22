@@ -40,6 +40,13 @@ public abstract class Disease implements Steppable {
 		PRESYMPTOMATIC, ASYMPTOMATIC, MILD, SEVERE, CRITICAL, RECOVERED, SUSCEPTIBLE, CAUSEOFDEATH, NA;
 	};
 	DISEASESTAGE diseaseStage;
+	// treatment stages
+	public enum TREATMENTSTAGE{
+		NOT_TREATED, TREATED;
+	}
+	
+	TREATMENTSTAGE treatmentStage;
+
 	// symptom manager
 	boolean isSymptomatic = false;
 	// test manager
@@ -133,6 +140,11 @@ public abstract class Disease implements Steppable {
 	}
 	
 	public boolean isSymptomatic() {return this.isSymptomatic;}
+	
+	// =============================================== Disease treatment ====================================================================================
+	public TREATMENTSTAGE getTreatmentStage() {return this.treatmentStage;}
+	public void setTreatmentStage(TREATMENTSTAGE stage) {this.treatmentStage = stage;}
+	public boolean beingTreated() {return this.treatmentStage.equals(TREATMENTSTAGE.TREATED);}
 
 	// =============================================== Disease logging ====================================================================================
 	public boolean getStageLogged() {
