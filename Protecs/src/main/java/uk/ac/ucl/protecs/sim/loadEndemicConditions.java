@@ -1,0 +1,99 @@
+package uk.ac.ucl.protecs.sim;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
+
+import uk.ac.ucl.protecs.behaviours.diseaseProgression.HIVDiseaseProgressionFramework;
+import uk.ac.ucl.protecs.objects.diseases.HIV;
+import uk.ac.ucl.protecs.objects.hosts.Person;
+import uk.ac.ucl.protecs.objects.hosts.Person.SEX;
+import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.DISEASE;
+
+import java.util.stream.Collectors;
+
+
+public class loadEndemicConditions{
+	
+
+	public static List<Person> get_demographic(WorldBankCovid19Sim world, int[] age_range, String sex) {
+		if (sex.equals("both")) {
+			return world.agents.stream()
+		            .filter(p -> p.inAgeRange(age_range))
+		            .collect(Collectors.toList());
+		}
+		else {
+		    return world.agents.stream()
+		            .filter(p -> p.inAgeRange(age_range))
+		            .filter(p -> p.isOfSex(SEX.getValue(sex)))
+		            .collect(Collectors.toList());
+	    }
+	}
+	
+	static void seed_endemic_conditions(WorldBankCovid19Sim world) {
+
+	    for (Entry<DISEASE, HashMap<String, HashMap<String, Double>>> diseaseEntry : world.params.prevalenceLineList.entrySet()) {
+	        DISEASE disease = diseaseEntry.getKey();
+	        HashMap<String, HashMap<String, Double>> sexMap = diseaseEntry.getValue();
+
+	        for (Entry<String, HashMap<String, Double>> sexEntry : sexMap.entrySet()) {
+	        	String sex = sexEntry.getKey();
+	            HashMap<String, Double> ageMap = sexEntry.getValue();
+
+	            for (Entry<String, Double> ageEntry : ageMap.entrySet()) {
+	                String age_range = ageEntry.getKey();
+	                double prevalence = ageEntry.getValue();
+	                // convert this percentage (between 0 and 100) to decimal
+	                prevalence /= 100;
+
+	                int[] bounds = convert_GBD_boundary_to_int(age_range);
+	                List<Person> eligible = get_demographic(world, bounds, sex);
+
+	                for (Person p : eligible) {
+	                    if (world.random.nextDouble() < prevalence) {
+
+	                        switch (disease) {
+	                            case HIV: {
+	        						if (world.hivFramework == null) {
+	        							world.hivFramework = new HIVDiseaseProgressionFramework(world);
+	        							}
+	                                HIV inf = new HIV(p, null, world.hivFramework.getEntryPoint(), world, 0);
+	                                world.schedule.scheduleOnce(inf, world.param_schedule_infecting);
+	                            }
+	                            default: {
+	                                // no-op for now
+	                            }
+	                        }
+	                    }
+	                }
+	            }
+	        }
+	    }
+	}
+
+	private static int[] convert_GBD_boundary_to_int(String ageRange) {
+	    ageRange = ageRange.trim();
+
+	    // Case: "<5 years"
+	    if (ageRange.startsWith("<")) {
+	        int upper = Integer.parseInt(ageRange.replaceAll("[^0-9]", ""));
+	        return new int[]{0, upper - 1};
+	    }
+
+	    // Case: "95+ years"
+	    if (ageRange.contains("+")) {
+	        int lower = Integer.parseInt(ageRange.replaceAll("[^0-9]", ""));
+	        return new int[]{lower, 120}; // or Integer.MAX_VALUE if you prefer
+	    }
+	    if (ageRange.equals("All ages")) {
+	        return new int[]{0, 120}; // or Integer.MAX_VALUE if you prefer
+
+	    }
+	    // Case: "X-Y years"
+	    String[] parts = ageRange.replace(" years", "").split("-");
+	    int lower = Integer.parseInt(parts[0]);
+	    int upper = Integer.parseInt(parts[1]);
+
+	    return new int[]{lower, upper};
+	}
+}

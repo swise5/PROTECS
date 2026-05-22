@@ -247,7 +247,7 @@ public class CoronavirusInfection extends Disease {
 	@Override
 	public String getDiseaseName() {
 	
-		return "COVID-19";
+		return DISEASE.COVID.key;
 	}
 	@Override
 	public DISEASE getDiseaseType() {
