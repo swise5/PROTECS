@@ -138,9 +138,8 @@ public class loadInfectionsInHumans{
 			}
 			}
 			if (usingDummyNCD) {
-				DummyNCDOnset myDummyNCD = new DummyNCDOnset();
-				DummyNCDOnset.causeDummyNCDs dummyNCDtrigger = myDummyNCD.new causeDummyNCDs(world);
-				world.schedule.scheduleRepeating(dummyNCDtrigger, world.param_schedule_infecting, world.params.ticks_per_month);
+				DummyNCDOnset myDummyNCD = new DummyNCDOnset(world);
+				world.schedule.scheduleRepeating(myDummyNCD, world.param_schedule_infecting, world.params.ticks_per_month);
 			}
 			
 		}
