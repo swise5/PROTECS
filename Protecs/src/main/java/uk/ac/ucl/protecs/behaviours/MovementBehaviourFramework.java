@@ -48,11 +48,19 @@ public class MovementBehaviourFramework implements BehaviourFramework {
 				// extract time info
 				int hour = ((int)time) % Params.ticks_per_day;
 				int day = (int)(time / Params.ticks_per_day) % 7; // because 7 days in a week
-				assert (hour >= 0) : "Hour of the day not valid, somehow has become negative " + hour;
-				assert (day >= 0) : "Day not valid, somehow has become negative " + day;
+				if (hour < 0) {
+					throw new IllegalArgumentException("Hour of the day not valid, somehow has become negative " + hour);
+				}
+				if (day < 0) {
+					throw new IllegalArgumentException("Day not valid, somehow has become negative " + day);
+				}
 				// determine likelihood of leaving the home today
 				double myEconStatProb = myWorld.params.getEconProbByDay(day, p.getEconStatus());
-				assert (myEconStatProb >= 0.0) & (myEconStatProb <= 1.0) : "Probability not valid " + myEconStatProb;
+				if (!((myEconStatProb >= 0.0) && (myEconStatProb <= 1.0))) {
+				    throw new IllegalArgumentException(
+				    		"probability out of bounds " + myEconStatProb
+				    );
+				}
 				if(myWorld.random.nextDouble() > myEconStatProb)
 					return myWorld.params.ticks_per_day; // rest until tomorrow
 
@@ -79,9 +87,11 @@ public class MovementBehaviourFramework implements BehaviourFramework {
 					p.setWentToCommunityToday(true);
 
 					p.setAtWork(false);
-					assert ! p.getHomeLocation().getSuper().equals(target) : 
-						"set to travel to a different district but didn't, home/target " + p.getHomeLocation().getSuper().getId() + " " + target.getId();
-					 // stay out until time to go home!
+					if (p.getHomeLocation().getSuper().equals(target)) {
+						throw new IllegalArgumentException("set to travel to a different district but didn't, home/target " + 
+								p.getHomeLocation().getSuper().getId() + " " + target.getId());
+					}
+					// stay out until time to go home!
 					return myWorld.params.hour_end_day_otherday - hour;
 				}
 				// if they aren't visiting, are they at work or the community?
@@ -104,7 +114,10 @@ public class MovementBehaviourFramework implements BehaviourFramework {
 
 					
 					p.transferTo(target);
-					assert (p.getLocation().equals(target)) : "Transfer to target didn't work, meant to be at " + target.getId() + " but is instead at " + p.getLocation().getId();
+					if (!p.getLocation().equals(target)) {
+						throw new IllegalArgumentException("Transfer to target didn't work, meant to be at " + target.getId() + 
+								" but is instead at " + p.getLocation().getId());
+					}
 					// update appropriately
 					if(goToWork){ // working
 						p.setActivityNode(workNode);
@@ -118,8 +131,10 @@ public class MovementBehaviourFramework implements BehaviourFramework {
 						p.setAtWork(false);	
 						p.setWentToCommunityToday(true);
 						p.setVisiting(false);
-						assert p.getHomeLocation().getSuper().getId().equals(target.getId()) : 
-							"set to travel to a within admin zone but didn't, home/target is " + p.getHomeLocation().getSuper().getId() + " " + target.getId();
+						if (!p.getHomeLocation().getSuper().getId().equals(target.getId())){
+							throw new IllegalArgumentException("set to travel to a within admin zone but didn't, home/target is " +
+									p.getHomeLocation().getSuper().getId() + " " + target.getId());
+						}
 						return myWorld.params.hour_end_day_otherday - hour; // stay out until time to go home!
 					}
 			}
@@ -128,7 +143,6 @@ public class MovementBehaviourFramework implements BehaviourFramework {
 //			private double oldDetermineDailyRoutine(Person p, int hour, int day) {
 //				Location target;
 //				target = myWorld.params.getTargetMoveDistrict(p, day, myWorld.random.nextDouble(), myWorld.lockedDown);
-//				assert target.getId().startsWith("d_"): "target is a null location";
 //				// define workday
 //				boolean goToWork = (p.isSchoolGoer() || target == p.getCommunityLocation()) // schoolgoer or going to own district
 //						&& myWorld.params.isWeekday(day);
@@ -137,7 +151,6 @@ public class MovementBehaviourFramework implements BehaviourFramework {
 //					goToWork = false;
 //				
 //				p.transferTo(target);
-//				assert (p.getLocation().equals(target)) : "Transfer to target didn't work";
 //
 //				// update appropriately
 //				if(goToWork){// working
@@ -150,7 +163,6 @@ public class MovementBehaviourFramework implements BehaviourFramework {
 //				else if(target == p.getCommunityLocation()) { // in home district, not working
 //					p.setActivityNode(communityNode);
 //					p.setAtWork(false);	
-//					assert p.getHousehold().getSuper().getId().equals(target.getId()) : 
 //						"set to travel to a within district but didn't, home/target " + p.getHousehold().getSuper().getId() + " " + target.getId();
 //					return myWorld.params.hour_end_day_otherday - hour; // stay out until time to go home!
 //				}
@@ -159,7 +171,6 @@ public class MovementBehaviourFramework implements BehaviourFramework {
 //					p.setActivityNode(communityNode);
 //					p.setAtWork(false);
 //					p.setVisiting(true);
-//					assert ! p.getHousehold().getSuper().equals(target) : 
 //						"set to travel to a different district but didn't, home/target " + p.getHousehold().getSuper().getId() + " " + target.getId();
 //					return myWorld.params.hour_end_day_otherday - hour; // stay out until time to go home!
 //				}
@@ -235,7 +246,9 @@ public class MovementBehaviourFramework implements BehaviourFramework {
 					p.transferTo(p.getHomeLocation());
 					p.setActivityNode(homeNode);
 					p.setVisiting(false);
-					assert p.getLocation().getId().equals(p.getHomeLocation().getId()) : "person isn't home but should be " + p.getLocation().getId();
+					if (!p.getLocation().getId().equals(p.getHomeLocation().getId())) {
+						throw new IllegalArgumentException("person isn't home but should be " + p.getLocation().getId());
+					}
 					return myWorld.params.hours_sleeping;
 				}
 				return 1; // check in again soon, but we have more time!
@@ -279,7 +292,6 @@ public class MovementBehaviourFramework implements BehaviourFramework {
 		return this.homeNode;
 	}
 
-	@Override
 	public BehaviourNode getHomeNode() {
 		// TODO Auto-generated method stub
 		return null;

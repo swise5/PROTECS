@@ -8,3 +8,4 @@ build
 
 # Ignore ward level OD matrix
 /Protecs/src/main/resources/ipums_daily_transition_count-ward-pre-lockdown_i5_correct_rounding.csv
+/target/

@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class WorkplaceTesting extends TestWatcherSetup{
+public class WorkplaceTest extends TestWatcherSetup{
 	// ================================================ Testing =======================================================================
 	// ===== Here we test that the model is reading in workplaces from the census csv file and are being stored as workplace objects. =
 	// ===== We check that subsequently the workplace bubbles are created and are associated with the workplace location created. =====
@@ -49,7 +49,7 @@ public class WorkplaceTesting extends TestWatcherSetup{
 	
 	private String params;
 
-	public WorkplaceTesting(String fileName) {
+	public WorkplaceTest(String fileName) {
 		this.params = fileName;
 	}
 

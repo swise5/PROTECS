@@ -1,9 +1,5 @@
 package uk.ac.ucl.protecs.behaviours.diseaseProgression;
 
-
-
-import static org.junit.Assert.fail;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
@@ -117,9 +113,24 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 					// moderate this based on the age of the host
 					double mySymptLikelihood = myWorld.params.getLikelihoodByAge(
 							covid_infection_p_sym_by_age, covid_infection_age_params, ((Person) i.getHost()).getAge());
-					assert (mySymptLikelihood >= 0.0) & (mySymptLikelihood <= 1.0) : "probability out of bounds " + mySymptLikelihood;
-					assert i.getHost() != null : "PROBLEM WITH INFECTION IN PERSON. INFECTION IS NULL " + ((Person) i.getHost()).getID();
-					assert i.getHost().getLocation() != null : "PROBLEM WITH LOCATION, LOCATION IS NULL" + i.getHost().getLocation().getId();
+					
+					if (!((mySymptLikelihood >= 0.0) && (mySymptLikelihood <= 1.0))) {
+					    throw new IllegalArgumentException(
+					    		"probability out of bounds " + mySymptLikelihood
+					    );
+					}
+					
+					if (i.getHost() == null) {
+					    throw new IllegalArgumentException(
+					    		"PROBLEM WITH INFECTION IN PERSON. INFECTION IS NULL " + ((Person) i.getHost()).getID()
+					    );
+					}
+					
+					if (i.getHost().getLocation() == null) {
+					    throw new IllegalArgumentException(
+					    		"PROBLEM WITH LOCATION, LOCATION IS NULL" + i.getHost().getLocation().getId()
+					    );
+					}
 
 					// activate the next step probabilistically
 					if(myWorld.random.nextDouble() < mySymptLikelihood){
@@ -150,15 +161,26 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 					
 					// timekeep this
 					i.time_infected = time;
-//					---------------- mySusceptLikelihood is sometimes greater than 1, is this correct -------------------------------------
-//					assert (mySusceptLikelihood >= 0.0) & (mySusceptLikelihood <= 1.0): "probability out of bounds: " + mySusceptLikelihood;
-					assert i.getHost() != null : "PROBLEM WITH INFECTION IN PERSON. INFECTION IS NULL " + ((Person) i.getHost()).getID();
-					assert i.getHost().getLocation() != null : "PROBLEM WITH LOCATION, LOCATION IS NULL" + i.getHost().getLocation().getId();
+					if (i.getHost() == null) {
+					    throw new IllegalArgumentException(
+					    		"PROBLEM WITH INFECTION IN PERSON. INFECTION IS NULL " + ((Person) i.getHost()).getID()
+					    );
+					}
+					
+					if (i.getHost().getLocation() == null) {
+					    throw new IllegalArgumentException(
+					    		"PROBLEM WITH LOCATION, LOCATION IS NULL" + i.getHost().getLocation().getId()
+					    );
+					}
 					// the agent has been infected - set the time at which it will become infecTIOUS
 					double timeUntilInfectious = myWorld.nextRandomLognormal(
 							covid_exposedToInfectious_mean,
 							covid_exposedToInfectious_std);
-					assert (timeUntilInfectious > 0): "Something has gone wrong in deciding when a person will become infectious, time is not in future: " + timeUntilInfectious;
+					if (timeUntilInfectious <= 0) {
+						throw new IllegalArgumentException(
+							"Something has gone wrong in deciding when a person will become infectious, time is not in future: " + timeUntilInfectious)
+						;
+					}
 					i.time_contagious = time + timeUntilInfectious;
 					// update the disease object to show that it hasn't been assigned a behaviour yet
 					// update the person's properties to show they have covid
@@ -209,7 +231,11 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 					double time_until_symptoms = myWorld.nextRandomLognormal(
 							covid_infectiousToSymptomatic_mean, 
 							covid_infectiousToSymptomatic_std);
-					assert (time_until_symptoms >= 0.0) : "sheduled time not in future: " + time_until_symptoms;
+					if (time_until_symptoms <= 0) {
+						throw new IllegalArgumentException(
+							"Something has gone wrong in deciding when a person will become symptomatic, time is not in future: " + time_until_symptoms)
+						;
+					}
 					i.time_start_symptomatic = time + time_until_symptoms;
 				}
 				
@@ -253,7 +279,11 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 					double time_until_recovered = myWorld.nextRandomLognormal(
 							covid_asymptomaticToRecovery_mean, 
 							covid_asymptomaticToRecovery_std);
-					assert (time_until_recovered > 0) : "Time until recovered is not set to the future " + time_until_recovered;
+					if (time_until_recovered <= 0) {
+						throw new IllegalArgumentException(
+							"Time to recovered is not in future: " + time_until_recovered)
+						;
+					}					
 					i.time_recovered = time + time_until_recovered;
 				}
 				
@@ -326,12 +356,21 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 					// determine if the patient will become sicker
 					double mySevereLikelihood = myWorld.params.getLikelihoodByAge(
 							covid_infection_p_sev_by_age, covid_infection_age_params, ((Person) i.getHost()).getAge());
-					assert (mySevereLikelihood >= 0.0) & (mySevereLikelihood <= 1.0) : "probablilty not valid: " + mySevereLikelihood;
+					if (!((mySevereLikelihood >= 0.0) && (mySevereLikelihood <= 1.0))) {
+					    throw new IllegalArgumentException(
+					    		"probability out of bounds " + mySevereLikelihood
+					    );
+					}					
 					if(myWorld.random.nextDouble() < mySevereLikelihood){
 						double time_until_severe = myWorld.nextRandomLognormal(
 								covid_symptomaticToSevere_mean, 
 								covid_symptomaticToSevere_std);
-						assert time_until_severe > 0 : "time until disease progression not scheduled in future";
+						if (time_until_severe <= 0) {
+							throw new IllegalArgumentException(
+								"Time to severe is not in future: " + time_until_severe
+								);
+						}	
+						
 						i.time_start_severe = time + time_until_severe;
 					}
 					
@@ -340,8 +379,12 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 						double time_until_recovered = myWorld.nextRandomLognormal(
 								covid_symptomaticToRecovery_mean, 
 								covid_symptomaticToRecovery_std);
-						assert time_until_recovered > 0 : "time until recovery not scheduled in future: " + time_until_recovered;
-
+						if (time_until_recovered <= 0) {
+							throw new IllegalArgumentException(
+								"Time to recovered is not in future: " + time_until_recovered
+								);
+						}	
+						
 						i.time_recovered = time + time_until_recovered;
 						return 1;
 					}
@@ -393,14 +436,24 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 					i.setDiseaseStage(DISEASESTAGE.SEVERE);
 					double myCriticalLikelihood = myWorld.params.getLikelihoodByAge(
 							covid_infection_p_cri_by_age, covid_infection_age_params, ((Person) i.getHost()).getAge());
-					assert (myCriticalLikelihood >= 0.0) & (myCriticalLikelihood <= 1.0) : "probablilty not valid " + myCriticalLikelihood;
 
+					if (!((myCriticalLikelihood >= 0.0) && (myCriticalLikelihood <= 1.0))) {
+					    throw new IllegalArgumentException(
+					    		"probability out of bounds " + myCriticalLikelihood
+					    );
+					}	
+					
 					// determine if the patient will become sicker
 					if(myWorld.random.nextDouble() < myCriticalLikelihood){
 						double time_until_critical = myWorld.nextRandomLognormal(
 								covid_severeToCritical_mean, 
 								covid_severeToCritical_std);
-						assert time_until_critical > 0.0 : "time until critical not in future";
+						if (time_until_critical <= 0) {
+							throw new IllegalArgumentException(
+								"Time to critical is not in future: " + time_until_critical
+								);
+						}	
+						
 
 						i.time_start_critical = time + time_until_critical;
 					}
@@ -410,8 +463,12 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 						double time_until_recovered = myWorld.nextRandomLognormal(
 								covid_severeToRecovery_mean, 
 								covid_severeToRecovery_std);
-						assert time_until_recovered > 0.0 : "time until recovered not in future " + time_until_recovered;
-
+						if (time_until_recovered <= 0) {
+							throw new IllegalArgumentException(
+								"Time to recovered is not in future: " + time_until_recovered
+								);
+						}	
+						
 						i.time_recovered = time + time_until_recovered;
 						return 1;
 					}
@@ -468,15 +525,23 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 					double myDeathLikelihood = myWorld.params.getLikelihoodByAge(
 							covid_infection_p_dea_by_age, covid_infection_age_params, ((Person) i.getHost()).getAge());
 					
-					assert (myDeathLikelihood >= 0.0) & (myDeathLikelihood <= 1.0) : "probablilty not valid " + myDeathLikelihood;
-
+					if (!((myDeathLikelihood >= 0.0) && (myDeathLikelihood <= 1.0))) {
+					    throw new IllegalArgumentException(
+					    		"probability out of bounds " + myDeathLikelihood
+					    );
+					}	
 					// determine if the patient will die
 					if(myWorld.random.nextDouble() < myDeathLikelihood){
 						double time_until_death = myWorld.nextRandomLognormal(
 								covid_criticalToDeath_mean, 
 								covid_criticalToDeath_std);
-						assert time_until_death > 0.0 : "time until died not in future " + time_until_death;
 
+
+						if (time_until_death <= 0) {
+							throw new IllegalArgumentException(
+								"Time to death is not in future: " + time_until_death
+								);
+						}	
 						i.time_died = time + time_until_death;
 					}
 					
@@ -485,8 +550,11 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 						double time_until_recovered = myWorld.nextRandomLognormal(
 								covid_criticalToRecovery_mean, 
 								covid_criticalToRecovery_std);
-						assert time_until_recovered > 0.0 : "time until recovered not in future " + time_until_recovered;
-
+						if (time_until_recovered <= 0) {
+							throw new IllegalArgumentException(
+								"Time to recovery is not in future: " + time_until_recovered
+								);
+						}	
 						i.time_recovered = time + time_until_recovered;
 						return 1;
 					}
@@ -907,16 +975,17 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 				covid_infection_p_dea_by_age.add(p_dea);
 
 			}
-			assert (covid_infection_r_sus_by_age.size() > 0): "infection_r_sus_by_age is negative, cannot be the case";
-			assert (covid_infection_p_sym_by_age.size() > 0): "infection_p_sym_by_age is negative, cannot be the case";
-			assert (covid_infection_p_sev_by_age.size() > 0): "infection_p_sev_by_age is negative, cannot be the case";
-			assert (covid_infection_p_cri_by_age.size() > 0): "infection_p_cri_by_age is negative, cannot be the case";
-			assert (covid_infection_p_dea_by_age.size() > 0): "infection_p_dea_by_age is negative, cannot be the case";
+			
+			if ((covid_infection_r_sus_by_age.size() <= 0) || (covid_infection_p_sym_by_age.size() <= 0) || 
+					(covid_infection_p_sev_by_age.size() <= 0) || (covid_infection_p_cri_by_age.size() <= 0) || 
+					(covid_infection_p_dea_by_age.size() <= 0)) {
+				lineListDataFile.close();
+				throw new IllegalArgumentException("Error in infection transmissions parameters");
+			}
 
 			lineListDataFile.close();
 			} catch (Exception e) {
-				System.out.println("File input error: " + filename);
-				fail();
+		        throw new IllegalArgumentException("File input error: " + filename);
 			}
 		}
 	public double getSuspectabilityByAge(int age){

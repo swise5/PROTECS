@@ -380,7 +380,6 @@ public class Person extends Host {
 //	
 //	private void structuredMixingInteractions() {
 //		if(currentLocation instanceof Household){
-//			assert (!this.atWork): "p_" + this.getID() + "at work but having interactions at home";
 //			interactWithin(currentLocation.personsHere, null, currentLocation.personsHere.size());		
 //		}
 //		// they may be at their economic activity site!

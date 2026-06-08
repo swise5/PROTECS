@@ -33,7 +33,7 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
 @RunWith(Parameterized.class)
-public class MobilityTesting extends TestWatcherSetup{
+public class MobilityTest extends TestWatcherSetup{
 	// ==================================== Testing ==========================================================================
 	// === These tests are designed to ensure that the transition between different locations are working as intended. =======
 	// === These tests will be split into perfect and imperfect mixing parts, as each form of the model will have different ==
@@ -60,7 +60,7 @@ public class MobilityTesting extends TestWatcherSetup{
 	
 	private String params;
 	
-	public MobilityTesting(String fileName) {
+	public MobilityTest(String fileName) {
 		this.params = fileName;
 	}
 	

@@ -12,7 +12,7 @@ import uk.ac.ucl.protecs.helperFunctions.*;
 import uk.ac.ucl.protecs.objects.hosts.Person.SEX;
 
 
-public class HIVTesting extends TestWatcherSetup {
+public class HIVTest extends TestWatcherSetup {
 	// ==================================== Testing ==================================================================	
 	@Override
 	protected String getParams() {

@@ -37,7 +37,7 @@ public class MapHouseholdWaterSupplyToSources{
 			        .collect(Collectors.toMap(
 			                Map.Entry::getKey,
 			                Map.Entry::getValue,
-			                (a, b) -> { throw new AssertionError(); },
+			                (a, b) -> { throw new IllegalArgumentException(); },
 			                LinkedHashMap::new
 			        ));
 			// now create water for each home and then map it to a communal source

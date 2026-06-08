@@ -28,7 +28,7 @@ import uk.ac.ucl.protecs.objects.diseases.Disease.DISEASESTAGE;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
-public class CoronavirusInfectiousBehaviourTesting extends TestWatcherSetup{
+public class CoronavirusInfectiousBehaviourTest extends TestWatcherSetup{
 	// ==================================== Testing ==================================================================
 	// === These tests are designed to ensure that the transition between different infectious behaviour nodes are ===
 	// === happening as they should do. Each of the behaviour nodes are forced into the population and then the ======

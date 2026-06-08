@@ -1,7 +1,5 @@
 package uk.ac.ucl.protecs.behaviours;
 
-import static org.junit.Assert.fail;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
@@ -456,8 +454,8 @@ public class Demography {
 			}
 			lineListDataFile.close();
 			} catch (Exception e) {
-				System.err.println("File input error: " + filename);
-				fail();
+		        throw new IllegalArgumentException("File input error: " + filename);
+
 			}
 	}
 	
@@ -507,8 +505,8 @@ public class Demography {
 			}
 			lineListDataFile.close();
 			} catch (Exception e) {
-				System.err.println("File input error: " + filename);
-				fail();
+		        throw new IllegalArgumentException("File input error: " + filename);
+
 			}
 	}
 	
