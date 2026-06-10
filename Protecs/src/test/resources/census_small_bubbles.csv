@@ -1,0 +1,9 @@
+,person_id,age,sex,household_id,workplace_id,district_id,economic_status,economic_activity_location_id,school_goers,manufacturing_workers
+0,0,27,female,1146000,district_1_ag_estates_1,d_1,ag_estates,1.0,0,0.0
+1,1,27,female,1146001,district_1_ag_estates_1,d_1,ag_estates,1.0,0,0.0
+2,2,27,female,1146002,district_1_ag_estates_2,d_1,ag_estates,1.0,0,0.0
+3,3,27,female,1146003,district_1_ag_estates_2,d_1,ag_estates,1.0,0,0.0
+4,4,40,male,2300000,district_1_manu_mining_trades_1,d_1,manu_mining_trades,1.0,0,0.0
+5,5,40,male,2300001,district_1_manu_mining_trades_1,d_1,manu_mining_trades,1.0,0,0.0
+6,6,40,male,2300002,district_2_manu_mining_trades_1,d_2,manu_mining_trades,1.0,0,0.0
+7,7,40,male,2300003,district_2_manu_mining_trades_1,d_2,manu_mining_trades,1.0,0,0.0
