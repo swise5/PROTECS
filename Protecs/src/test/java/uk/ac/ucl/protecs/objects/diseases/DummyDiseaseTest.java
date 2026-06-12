@@ -26,7 +26,7 @@ import uk.ac.ucl.protecs.objects.hosts.Water;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.DISEASE;
 
 
-public class DummyDiseaseTesting extends TestWatcherSetup{
+public class DummyDiseaseTest extends TestWatcherSetup{
 	
 	@Override
 	protected String getParams() {

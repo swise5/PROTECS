@@ -18,7 +18,6 @@ import uk.ac.ucl.protecs.objects.locations.Location;
 import uk.ac.ucl.protecs.objects.locations.Workplace;
 import uk.ac.ucl.protecs.objects.locations.Location.LocationCategory;
 
-import static org.junit.Assert.fail;
 
 public class LoadPopulation{
 	
@@ -184,8 +183,8 @@ public class LoadPopulation{
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("File input error: " + agentsFilename);
-			fail();
+	        throw new IllegalArgumentException("File input error: " + agentsFilename);
+
 		}
 	}
 }

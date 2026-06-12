@@ -132,7 +132,10 @@ public class CoronavirusInfection extends Disease {
 			}
 			else {
 				if(this.getHost().getLocation() instanceof Household){
-					assert (!((Person) this.getHost()).atWorkNow()): "p_" + ((Person) this.getHost()).getID() + "at work but having interactions at home";
+					if (((Person) this.getHost()).atWorkNow()){
+						throw new IllegalArgumentException("p_" + ((Person) this.getHost()).getID() + "at work but having interactions at home");
+						
+					}
 					((Person) this.getHost()).interactWithin(this.getHost().getLocation().personsHere, null, this.getHost().getLocation().personsHere.size(), DISEASE.COVID, myWorld.covidInfectiousFramework.getCovid_infectious_beta());		
 				}
 				// they may be at their economic activity site!

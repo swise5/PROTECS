@@ -25,7 +25,7 @@ import uk.ac.ucl.protecs.objects.locations.CommunityLocation;
 import uk.ac.ucl.protecs.objects.locations.Household;
 import uk.ac.ucl.protecs.objects.locations.Location.LocationCategory;
 
-public class CholeraInWaterTesting extends TestWatcherSetup{
+public class CholeraInWaterTest extends TestWatcherSetup{
 	// ============================================== Cholera in water testing suit ==============================================================================
 	// This suite of tests is designed to check that how water is initiated, and interacted with is working as intended. Currently we test:
 	// 1) Household water supplies are linked to a community based water source

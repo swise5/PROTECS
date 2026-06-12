@@ -29,7 +29,7 @@ import uk.ac.ucl.protecs.objects.hosts.Person;
 
 @RunWith(Parameterized.class)
 
-public class ParamsTesting extends TestWatcherSetup{
+public class ParamsTest extends TestWatcherSetup{
 	@Override
 	protected String getParams() {
 		return params;
@@ -42,7 +42,7 @@ public class ParamsTesting extends TestWatcherSetup{
 
 	private String params;
 	
-	public ParamsTesting(String fileName) {
+	public ParamsTest(String fileName) {
 		this.params = fileName;
 	}
 	
@@ -301,7 +301,7 @@ public class ParamsTesting extends TestWatcherSetup{
 			sim_should_raise_exception.start();
 			HelperFunctions.runSimulation(sim_should_raise_exception, 10);
 		}
-		catch (java.lang.AssertionError e) {
+		catch (Exception e) {
 			// Assert flag raised, update run_without_issue
 			ran_without_issue = false;
 		}
