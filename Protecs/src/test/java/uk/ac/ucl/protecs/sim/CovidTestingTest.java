@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public class CovidTestingTesting extends TestWatcherSetup{
+public class CovidTestingTest extends TestWatcherSetup{
 	
 	@Override
 	protected String getParams() {

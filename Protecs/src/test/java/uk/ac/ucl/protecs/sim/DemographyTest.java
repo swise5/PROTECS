@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 // ===== sex and that over the course of the simulation, people have their age updated when they have a birthday. =================
 // ================================================================================================================================
 
-public class DemographyTesting extends TestWatcherSetup{
+public class DemographyTest extends TestWatcherSetup{
 	@Override
 	protected String getParams() {
 		return "params_demography.txt";

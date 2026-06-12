@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public class PregnancyTesting extends TestWatcherSetup{
+public class PregnancyTest extends TestWatcherSetup{
 	@Override
 	protected String getParams() {
 		return "params_demography.txt";

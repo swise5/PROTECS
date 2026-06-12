@@ -29,7 +29,7 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.rules.TestName;
 
-public class CovidSpuriousSymptomTesting extends TestWatcherSetup{
+public class CovidSpuriousSymptomTest extends TestWatcherSetup{
 	
 	@Override
 	protected String getParams() {

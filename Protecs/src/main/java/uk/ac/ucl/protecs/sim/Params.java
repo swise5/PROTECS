@@ -1,7 +1,5 @@
 package uk.ac.ucl.protecs.sim;
 
-import static org.junit.Assert.fail;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
@@ -171,12 +169,26 @@ public class Params {
 		dailyTransitionLockdownProbs = load_admin_zone_data(dataDir + admin_zone_transition_LOCKDOWN_filename);
 		dailyTransitionPrelockdownProbs = load_admin_zone_data(dataDir + admin_zone_transition_PRELOCKDOWN_filename);
 		// Check origin-destination matrices are formatted as expected
-		assert (dailyTransitionLockdownProbs.size() == dailyTransitionPrelockdownProbs.size()): "Movement data for pre and post lockdown inconsistent, look into ODMs";
-		assert (dailyTransitionLockdownProbs.get(0).size() == dailyTransitionPrelockdownProbs.get(0).size()): "Movement data for pre and post lockdown inconsistent, look into ODMs";
-		
+		if (dailyTransitionLockdownProbs.size() != dailyTransitionPrelockdownProbs.size()) {
+		    throw new IllegalStateException(
+		        "Movement data for pre and post lockdown inconsistent, look into ODMs"
+		    );
+		}
+		if (dailyTransitionLockdownProbs.get(0).size() != dailyTransitionPrelockdownProbs.get(0).size()) {
+		    throw new IllegalStateException(
+		        "Movement data for pre and post lockdown inconsistent, look into ODMs"
+		    );
+		}
+				
 		economic_status_weekday_movement_prob = readInEconomicData(dataDir + economic_status_weekday_movement_prob_filename, "economic_status", "movement_probability");
 		economic_status_otherday_movement_prob = readInEconomicData(dataDir + economic_status_otherday_movement_prob_filename, "economic_status", "movement_probability");				
-		assert (economic_status_otherday_movement_prob.size() == economic_status_weekday_movement_prob.size()): "Inconsistent data for ecom movement prob between weekday and otherday";
+		
+		if (economic_status_otherday_movement_prob.size() != economic_status_weekday_movement_prob.size()) {
+		    throw new IllegalStateException(
+		    		"Inconsistent data for ecom movement prob between weekday and otherday"
+		    	);
+		}
+		
 		// Load in where you want COVID cases to be initialised
 		load_line_list(dataDir  + line_list_filename);		
 		// Load in prevalence of diseases
@@ -253,8 +265,8 @@ public class Params {
 			}			
 		paramFile.close();
 		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
+	        throw new IllegalArgumentException("File input error: " + paramFilename);
+
 		}
 
 
@@ -329,12 +341,13 @@ public class Params {
 
 				}
 			}
-			
-			assert aDiseaseHasBeenSeeded: "No disease has been seeded";
+			if (!aDiseaseHasBeenSeeded) {
+				throw new IllegalArgumentException("No disease has been seeded");
+			}
 			
 		} catch (Exception e) {
-			System.err.println("File input error: " + lineListFilename);
-			fail();
+	        throw new IllegalArgumentException("File input error: " + lineListFilename);
+
 		}
 	}
 	
@@ -387,8 +400,8 @@ public class Params {
 			}
 			
 		} catch (Exception e) {
-			System.err.println("File input error: " + prevalence_line_list_filename);
-			fail();
+	        throw new IllegalArgumentException("File input error: " + prevalence_line_list_filename);
+
 		}
 	}
 	
@@ -431,8 +444,8 @@ public class Params {
 			}
 			lockdownListDataFile.close();
 		} catch (Exception e) {
-			System.err.println("File input error: " + lockdownChangelistFilename);
-			fail();
+	        throw new IllegalArgumentException("File input error: " + lockdownChangelistFilename);
+
 		}
 	}
 	
@@ -469,11 +482,16 @@ public class Params {
 				test_dates.add((Integer)dayVal);
 				number_of_tests_per_day.add((Integer)tests_on_day);
 			}
-			assert (number_of_tests_per_day.size() > 0): "Number of tests per day not loaded";
+			
+			if (number_of_tests_per_day.size() <= 0) {
+				testingDataFile.close();
+				throw new IllegalArgumentException("Number of tests per day not loaded");
+			}
+			
 			testingDataFile.close();
 		} catch (Exception e) {
-			System.err.println("File input error: " + testDataFilename);
-			fail();
+	        throw new IllegalArgumentException("File input error: " + testDataFilename);
+
 		}
 	}
 	
@@ -506,15 +524,26 @@ public class Params {
 				String zone_to_test_in = bits[admin_zone_name];
 				admin_zones_to_test_in.add(zone_to_test_in);
 			}
-			assert (admin_zones_to_test_in.size() > 0): "Number of admin zone to test in not loaded";
+			if (admin_zones_to_test_in.size() <= 0) {
+				testingDataFile.close();
+				throw new IllegalArgumentException(
+						 "Number of admin zone to test in not loaded"
+				    );
+			}
+			
 			for (String location: admin_zones_to_test_in) {
-				assert (adminZoneNames.contains(location)): "Location to test in not found in model admin zones " + location;
+				if (!adminZoneNames.contains(location)) {
+					testingDataFile.close();
+				    throw new IllegalArgumentException(
+				        "Location to test in not found in model admin zones: " + location
+				    );
+				}			
 			}
 			
 			testingDataFile.close();
 		} catch (Exception e) {
-			System.err.println("File input error: " + testLocationsFilename);
-			fail();
+	        throw new IllegalArgumentException("File input error: " + testLocationsFilename);
+
 		}
 	}
 	
@@ -583,8 +612,8 @@ public class Params {
 			// clean up after ourselves
 			workplaceData.close();
 		} catch (Exception e) {
-			System.err.println("File input error: " + workplaceFilename);
-			fail();
+	        throw new IllegalArgumentException("File input error: " + workplaceFilename);
+
 		}
 		
 	}
@@ -636,8 +665,8 @@ public class Params {
 			// clean up after ourselves
 			workplaceData.close();
 		} catch (Exception e) {
-			System.err.println("File input error: " + workplaceConstraints);
-			fail();
+	        throw new IllegalArgumentException("File input error: " + workplaceConstraints);
+
 		}
 		
 	}
@@ -690,8 +719,8 @@ public class Params {
 				communityContactData.close();
 			} 
 		catch (Exception e) {
-			System.err.println("File input error: " + filename);
-			fail();
+	        throw new IllegalArgumentException("File input error: " + filename);
+
 		}
 	}
 	
@@ -754,9 +783,7 @@ public class Params {
 //				// save ordering info
 //				orderedEconStatuses.add(bits[0].toLowerCase());
 //			}
-//			assert (economicInteractionDistrib.size() > 0): "economicInteractionDistrib not loaded";
-//			assert (economicInteractionCumulativeDistrib.size() > 0): "economicInteractionCumulativeDistrib not loaded";
-//			assert (orderedEconStatuses.size() > 0): "orderedEconStatuses not loaded";			
+//					
 //			econDistribData.close();
 //		} catch (Exception e) {
 //			System.err.println("File input error: " + econ_interaction_distrib_filename);
@@ -841,13 +868,14 @@ public class Params {
 			
 			// clean up after ourselves
 			adminZoneData.close();
-			assert (adminZones.size() > 0): "Admin zone not loaded";
-			assert (probHolder.size() > 0): "Probability of transition between admin zones not loaded";
+			
+			if ((adminZones.size() <= 0) || (probHolder.size() <= 0)) {
+				throw new IllegalArgumentException("Admin zone not loaded or probability of transition between admin zones not loaded");
+			}
+
 			return probHolder;
 		} catch (Exception e) {
-			System.err.println("File input error: " + adminZoneFilename);
-			fail();
-			return null;
+	        throw new IllegalArgumentException("File input error: " + adminZoneFilename);
 		}
 	}
 	
@@ -890,13 +918,13 @@ public class Params {
 			}
 			int number_of_admin_zones = adminZones.size();
 			if (Math.floor(number_of_admin_zones / number_of_admin_zones)!= 1) {
-				fail();
+		        throw new IllegalArgumentException("File input error: " + communityLocFilename);
 			}
 			
 		} 
 		catch (Exception e) {
-			System.err.println("File input error: " + communityLocFilename);
-			fail();
+	        throw new IllegalArgumentException("File input error: " + communityLocFilename);
+
 			}
 		}
 	};
@@ -943,13 +971,13 @@ public class Params {
 			}
 			
 			if ((lower_age_range.size() != boundary_count) || (upper_age_range.size() != boundary_count)) {
-				fail();
+		        throw new IllegalArgumentException("File input error: " + loggingAgeBoundaryFile);
 			}
 			
 		} 
 		catch (Exception e) {
-			System.err.println("File input error: " + loggingAgeBoundaryFile);
-			fail();
+	        throw new IllegalArgumentException("File input error: " + loggingAgeBoundaryFile);
+
 			}
 		}
 	};
@@ -1002,10 +1030,9 @@ public class Params {
 			
 			return econData;
 		} catch (Exception e) {
-			System.err.println("File input error: " + econFilename);
-			fail();
+	        throw new IllegalArgumentException("File input error: " + econFilename);
+
 		}
-		return null;
 	}
 
 	// file import helper utilities

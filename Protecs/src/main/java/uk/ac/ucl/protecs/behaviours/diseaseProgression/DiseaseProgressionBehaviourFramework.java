@@ -15,7 +15,7 @@ public class DiseaseProgressionBehaviourFramework implements BehaviourFramework 
 	WorldBankCovid19Sim myWorld;
 	Disease myInfection;
 	BehaviourNode susceptibleNode = null, exposedNode = null, presymptomaticNode= null, asymptomaticNode = null,
-			mildNode = null, severeNode = null, criticalNode = null, recoveredNode = null, deadNode = null, contaminatedNode = null;
+			mildNode = null, severeNode = null, criticalNode = null, recoveredNode = null, deadNode = null, contaminatedNode = null, treatmentNode = null;
 
 	BehaviourNode standardEntryPoint;
 	public DiseaseProgressionBehaviourFramework(WorldBankCovid19Sim world){
@@ -28,7 +28,6 @@ public class DiseaseProgressionBehaviourFramework implements BehaviourFramework 
 		return this.exposedNode;
 	}
 
-	@Override
 	public BehaviourNode getHomeNode() {
 		// TODO Auto-generated method stub
 		return null;

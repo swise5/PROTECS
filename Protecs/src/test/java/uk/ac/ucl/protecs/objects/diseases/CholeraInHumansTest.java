@@ -29,7 +29,7 @@ import uk.ac.ucl.protecs.objects.diseases.Disease.DISEASESTAGE;
 import uk.ac.ucl.protecs.objects.hosts.Person;
 
 
-public class CholeraInHumansTesting extends TestWatcherSetup{
+public class CholeraInHumansTest extends TestWatcherSetup{
 	// ============================================== Cholera in humans testing suit ==============================================================================
 	// Here we aim to test the instantiation of Cholera in the Person object and the disease progression behaviour following subsequent infection.
 	// We test that: 
