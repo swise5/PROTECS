@@ -78,11 +78,15 @@ public class Person extends Host {
 	Integer dayGaveBirth = Integer.MAX_VALUE;
 	Integer numberOfTimesWithCovid = 0;
 
+	// Birth status
+	boolean bornPreTerm = false;
+	boolean priorPreTerm = false;
+
 	// Malnutrition
-	private enum BMIStatus{UNDERWEIGHT, HEALTHYWEIGHT, OVERWEIGHT, OBESE}
+	public enum BMIStatus{UNDERWEIGHT, HEALTHYWEIGHT, OVERWEIGHT, OBESE}
 	
 	BMIStatus bmistatus = BMIStatus.HEALTHYWEIGHT; // Default at healthy weight
-	
+
 	boolean wasted = false;
 	boolean stunted = false;
 	// GBD indicated nutritional deficiencies
@@ -688,6 +692,30 @@ public class Person extends Host {
 		return this.age > 18;
 	}
 
+	public BMIStatus getBmistatus() {
+		return bmistatus;
+	}
+
+	public void setBmistatus(BMIStatus bmistatus) {
+		this.bmistatus = bmistatus;
+	}
+	
+	public boolean isBornPreTerm() {
+		return bornPreTerm;
+	}
+
+	public void setBornPreTerm(boolean bornPreTerm) {
+		this.bornPreTerm = bornPreTerm;
+	}
+	
+	public boolean hasPriorPreTerm() {
+		return priorPreTerm;
+	}
+
+	public void setPriorPreTerm(boolean priorPreTerm) {
+		this.priorPreTerm = priorPreTerm;
+	}
+	
 	public boolean inAgeRange(int[] range) {
 		boolean toReturn = false;
 		if ((range[0] <= this.getAge()) && (this.getAge() <= range[1])) {

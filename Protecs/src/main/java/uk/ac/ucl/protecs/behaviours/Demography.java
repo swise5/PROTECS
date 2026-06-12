@@ -12,11 +12,13 @@ import sim.engine.SimState;
 import sim.engine.Steppable;
 import uk.ac.ucl.protecs.objects.diseases.Disease;
 import uk.ac.ucl.protecs.objects.hosts.Person;
+import uk.ac.ucl.protecs.objects.hosts.Person.BMIStatus;
 import uk.ac.ucl.protecs.objects.hosts.Person.OCCUPATION;
 import uk.ac.ucl.protecs.objects.hosts.Person.SEX;
 import uk.ac.ucl.protecs.objects.locations.Household;
 import uk.ac.ucl.protecs.objects.locations.Workplace;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim;
+import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.DISEASE;
 
 public class Demography {
 	WorldBankCovid19Sim myWorld;
@@ -26,6 +28,16 @@ public class Demography {
 	public ArrayList <Double> prob_death_by_age_female;
 	public ArrayList <Integer> birth_age_params;
 	public ArrayList <Double> prob_birth_by_age;
+	
+	// PTB risk factor parameters TODO: fill with values
+	public double ptb_base_rate = 0;
+	public double ptb_rr_age_less_than_20_years = 1;
+	public double ptb_rr_age_more_than_35_years = 1;
+	public double ptb_rr_hiv = 1;
+	public double ptb_rr_malaria = 1;
+	public double ptb_rr_prior_ptb = 1;
+	public double ptb_rr_underweight = 1;
+
 	
 	enum MortalitySteps {
 		DEATH,
@@ -156,6 +168,7 @@ public class Demography {
 		int tickToCauseBirth = Integer.MAX_VALUE;
 		int ticksToUpdatePregnancy = Integer.MAX_VALUE;
 		int daysToRescheduleNextBirth = Integer.MAX_VALUE;
+		boolean ptb = false;
 		boolean initialSetUp = true;
 		WorldBankCovid19Sim world;
 		public Births( Person p, WorldBankCovid19Sim myWorld ) {
@@ -174,7 +187,8 @@ public class Demography {
 				// reset tickToCauseBirth so this pathway can be used again
 				this.tickToCauseBirth = Integer.MAX_VALUE;
 				this.ticksToUpdatePregnancy = Integer.MAX_VALUE;
-
+				// reset the preterm birth characteristic
+				this.ptb = false;
 				// reschedule the check to occur next year
 				int currentTime = (int) arg0.schedule.getTime();
 				int currentDay = (int) currentTime / world.params.ticks_per_day;
@@ -221,7 +235,7 @@ public class Demography {
 					switch (nextStep) {
 					case INITIALISED_PREGNANT:{
 						target.setPregnant(true);
-						int dayToCauseBirth = myWorld.random.nextInt(9 * 30);
+						int dayToCauseBirth = determine_birth_date(this);
 						this.tickToCauseBirth = (currentDay + dayToCauseBirth) * world.params.ticks_per_day;
 //						System.out.println("First nine months scheduled to give birth on " + (currentDay + dayToCauseBirth));
 						// schedule this to rerun on the birth date
@@ -276,7 +290,8 @@ public class Demography {
 			
 				switch (nextStep) {
 					case BIRTH:{
-						createBirth(myWorld, target.isAlive());
+						
+						createBirth(myWorld, target.isAlive(), this.ptb);
 						postBirthRescheduling(myWorld, target.isAlive());
 						break;
 					}
@@ -284,7 +299,7 @@ public class Demography {
 					case PREGNANCY:{
 						target.setPregnant(true);
 						// set a date for the birth
-						this.tickToCauseBirth =  9 * 30 * world.params.ticks_per_day + ticksToUpdatePregnancy;
+						this.tickToCauseBirth =  determine_birth_date(this);;
 						// schedule this to rerun on the birth date
 						myWorld.schedule.scheduleOnce(this.tickToCauseBirth, this);	
 						break;
@@ -317,7 +332,7 @@ public class Demography {
 			}
 		}
 		
-		private void createBirth(SimState arg0, boolean isAlive) {
+		private void createBirth(SimState arg0, boolean isAlive, boolean isPreTerm) {
 			if (isAlive) {
 				int time = (int) (arg0.schedule.getTime() / world.params.ticks_per_day);
 //				System.out.println(target.getID() + " giving birth on " + (time));
@@ -360,6 +375,10 @@ public class Demography {
 				for (Disease d: target.getDiseaseSet().values()) {
 					d.verticalTransmission(baby);
 				}
+				// if baby is born pre-term, set this property
+				if (this.ptb) {
+					baby.setBornPreTerm(true);
+				}
 			}
 		// reset if they are pregnant or not
 		target.setPregnant(false);
@@ -368,6 +387,38 @@ public class Demography {
 	}
 	public ArrayList<Integer> getAll_cause_death_age_params() {
 		return all_cause_death_age_params;
+	}
+
+	public int determine_birth_date(Births BirthChecker) {
+		int birthdate = 0;
+		if (BirthChecker.initialSetUp) {
+			birthdate = myWorld.random.nextInt(9 * 30);
+			}
+		else {
+			birthdate = 9 * 30 * BirthChecker.world.params.ticks_per_day + BirthChecker.ticksToUpdatePregnancy;
+			}
+		double prob_ptb = ptb_base_rate;
+		if (BirthChecker.target.getAge() < 20) {
+			prob_ptb *= ptb_rr_age_less_than_20_years;
+		}
+		else if (BirthChecker.target.getAge() > 35) {
+			prob_ptb *= ptb_rr_age_more_than_35_years;
+		}
+		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.HIV.key)) {
+			prob_ptb *= ptb_rr_hiv;
+		}
+		if (BirthChecker.target.hasPriorPreTerm()) {
+			prob_ptb *= ptb_rr_prior_ptb;
+		}
+		if (BirthChecker.target.getBmistatus().equals(BMIStatus.UNDERWEIGHT)) {
+			prob_ptb *= ptb_rr_underweight;
+		}
+		BirthChecker.ptb = BirthChecker.world.random.nextDouble() < prob_ptb;
+		if (BirthChecker.ptb) {
+			// TODO PTB earliness distribution
+			birthdate -= 30;
+		}
+		return birthdate;
 	}
 
 	public void setAll_cause_death_age_params(ArrayList<Integer> all_cause_death_age_params) {
