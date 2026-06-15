@@ -203,6 +203,111 @@ public class PregnancyTest extends TestWatcherSetup{
 		Assert.assertTrue(with_twins_n_babies == 2 * no_twin_n_babies);
 
 
+	}
+	
+	@Test
+	public void testUnderTwentyRiskFactorIncreasesPTB() {
+		int seed = (int) this.seed;		
+
+		// set up the simulation
+		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
+		sim.start();
+		// set dummy values for ptb
+		sim.demographyFramework.setPtb_base_rate(0.5);
+		// remove the effects of risk factors
+		sim.demographyFramework.setPtb_AOR_age_less_than_20_years(0);
+		sim.demographyFramework.setPtb_AOR_short_birth_interval(0);
+		sim.demographyFramework.setPtb_AOR_previous_ptb(0);
+		sim.demographyFramework.setPtb_AOR_anemia(0);
+		sim.demographyFramework.setPtb_AOR_hiv(0);
+		sim.demographyFramework.setPtb_AOR_malaria(0);
+		sim.demographyFramework.setPtb_AOR_multiple_pregnancy(0);
+		
+		int numDays = 100; 		
+ 		HelperFunctions.runSimulation(sim, numDays);
+		ArrayList <Person> baseRateBabiesBornPreTerm = new ArrayList<Person>();
+
+		for (Person p: sim.agents) {
+			if (p.isBornPreTerm()) {
+				baseRateBabiesBornPreTerm.add(p);
+			}
+		}
+		
+		WorldBankCovid19Sim sim_w_age = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
+		sim_w_age.start();
+		// set dummy values for ptb
+		sim_w_age.demographyFramework.setPtb_base_rate(0.5);
+		// remove the effects of risk factors apart from age
+		sim_w_age.demographyFramework.setPtb_AOR_short_birth_interval(0);
+		sim_w_age.demographyFramework.setPtb_AOR_previous_ptb(0);
+		sim_w_age.demographyFramework.setPtb_AOR_anemia(0);
+		sim_w_age.demographyFramework.setPtb_AOR_hiv(0);
+		sim_w_age.demographyFramework.setPtb_AOR_malaria(0);
+		sim_w_age.demographyFramework.setPtb_AOR_multiple_pregnancy(0);
+		
+		HelperFunctions.runSimulation(sim_w_age, numDays);
+		ArrayList <Person> ageAffectedRateBabiesBornPreTerm = new ArrayList<Person>();
+
+		for (Person p: sim_w_age.agents) {
+			if (p.isBornPreTerm()) {
+				ageAffectedRateBabiesBornPreTerm.add(p);
+			}
+		}
+		
+		Assert.assertTrue(ageAffectedRateBabiesBornPreTerm.size() > baseRateBabiesBornPreTerm.size());
+
+	}
+	
+	@Test
+	public void testHIVRiskFactorIncreasesPTB() {
+		int seed = (int) this.seed;		
+
+		// set up the simulation
+		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
+		sim.start();
+		// set dummy values for ptb
+		sim.demographyFramework.setPtb_base_rate(0.5);
+		// remove the effects of risk factors
+		sim.demographyFramework.setPtb_AOR_age_less_than_20_years(0);
+		sim.demographyFramework.setPtb_AOR_short_birth_interval(0);
+		sim.demographyFramework.setPtb_AOR_previous_ptb(0);
+		sim.demographyFramework.setPtb_AOR_anemia(0);
+		sim.demographyFramework.setPtb_AOR_hiv(0);
+		sim.demographyFramework.setPtb_AOR_malaria(0);
+		sim.demographyFramework.setPtb_AOR_multiple_pregnancy(0);
+		
+		int numDays = 100; 		
+ 		HelperFunctions.runSimulation(sim, numDays);
+		ArrayList <Person> baseRateBabiesBornPreTerm = new ArrayList<Person>();
+
+		for (Person p: sim.agents) {
+			if (p.isBornPreTerm()) {
+				baseRateBabiesBornPreTerm.add(p);
+			}
+		}
+		
+		WorldBankCovid19Sim sim_w_hiv = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
+		sim_w_hiv.start();
+		// set dummy values for ptb
+		sim_w_hiv.demographyFramework.setPtb_base_rate(0.5);
+		// remove the effects of risk factors apart from HIV
+		sim_w_hiv.demographyFramework.setPtb_AOR_age_less_than_20_years(0);
+		sim_w_hiv.demographyFramework.setPtb_AOR_short_birth_interval(0);
+		sim_w_hiv.demographyFramework.setPtb_AOR_previous_ptb(0);
+		sim_w_hiv.demographyFramework.setPtb_AOR_anemia(0);
+		sim_w_hiv.demographyFramework.setPtb_AOR_malaria(0);
+		sim_w_hiv.demographyFramework.setPtb_AOR_multiple_pregnancy(0);
+		
+		HelperFunctions.runSimulation(sim_w_hiv, numDays);
+		ArrayList <Person> hivAffectedRateBabiesBornPreTerm = new ArrayList<Person>();
+
+		for (Person p: sim_w_hiv.agents) {
+			if (p.isBornPreTerm()) {
+				hivAffectedRateBabiesBornPreTerm.add(p);
+			}
+		}
+		
+		Assert.assertTrue(hivAffectedRateBabiesBornPreTerm.size() > baseRateBabiesBornPreTerm.size());
 
 	}
 	

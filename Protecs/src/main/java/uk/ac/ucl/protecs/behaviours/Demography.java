@@ -600,6 +600,60 @@ public class Demography {
 	public void setProb_multiple_pregnancy(double prob_multiple_pregnancy) {
 		this.prob_multiple_pregnancy = prob_multiple_pregnancy;
 	}
+	public double getPtb_AOR_age_less_than_20_years() {
+		return ptb_AOR_age_less_than_20_years;
+	}
 
+	public void setPtb_AOR_age_less_than_20_years(double ptb_AOR_age_less_than_20_years) {
+		this.ptb_AOR_age_less_than_20_years = ptb_AOR_age_less_than_20_years;
+	}
+
+	public double getPtb_AOR_short_birth_interval() {
+		return ptb_AOR_short_birth_interval;
+	}
+
+	public void setPtb_AOR_short_birth_interval(double ptb_AOR_short_birth_interval) {
+		this.ptb_AOR_short_birth_interval = ptb_AOR_short_birth_interval;
+	}
+
+	public double getPtb_AOR_previous_ptb() {
+		return ptb_AOR_previous_ptb;
+	}
+
+	public void setPtb_AOR_previous_ptb(double ptb_AOR_previous_ptb) {
+		this.ptb_AOR_previous_ptb = ptb_AOR_previous_ptb;
+	}
+
+	public double getPtb_AOR_anemia() {
+		return ptb_AOR_anemia;
+	}
+
+	public void setPtb_AOR_anemia(double ptb_AOR_anemia) {
+		this.ptb_AOR_anemia = ptb_AOR_anemia;
+	}
+
+	public double getPtb_AOR_hiv() {
+		return ptb_AOR_hiv;
+	}
+
+	public void setPtb_AOR_hiv(double ptb_AOR_hiv) {
+		this.ptb_AOR_hiv = ptb_AOR_hiv;
+	}
+
+	public double getPtb_AOR_malaria() {
+		return ptb_AOR_malaria;
+	}
+
+	public void setPtb_AOR_malaria(double ptb_AOR_malaria) {
+		this.ptb_AOR_malaria = ptb_AOR_malaria;
+	}
+
+	public double getPtb_AOR_multiple_pregnancy() {
+		return ptb_AOR_multiple_pregnancy;
+	}
+
+	public void setPtb_AOR_multiple_pregnancy(double ptb_AOR_multiple_pregnancy) {
+		this.ptb_AOR_multiple_pregnancy = ptb_AOR_multiple_pregnancy;
+	}
 	
 }
