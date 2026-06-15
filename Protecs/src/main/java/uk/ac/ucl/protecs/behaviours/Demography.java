@@ -12,7 +12,6 @@ import sim.engine.SimState;
 import sim.engine.Steppable;
 import uk.ac.ucl.protecs.objects.diseases.Disease;
 import uk.ac.ucl.protecs.objects.hosts.Person;
-import uk.ac.ucl.protecs.objects.hosts.Person.BMIStatus;
 import uk.ac.ucl.protecs.objects.hosts.Person.OCCUPATION;
 import uk.ac.ucl.protecs.objects.hosts.Person.SEX;
 import uk.ac.ucl.protecs.objects.locations.Household;
@@ -40,7 +39,7 @@ public class Demography {
 	public double ptb_AOR_multiple_pregnancy = 3.08;
 	
 	public double prob_multiple_pregnancy = 0.0174; // https://www.cambridge.org/core/journals/twin-research-and-human-genetics/article/twin-births-in-42-subsaharan-african-countries-from-1986-to-2016-frequency-trends-and-factors-of-variation/39A88B150744A794DDBF816FFA7F5950?utm_source=chatgpt.com
-	
+
 	enum MortalitySteps {
 		DEATH,
 		NO_DEATH
@@ -236,9 +235,17 @@ public class Demography {
 					if ((nextStep != BirthSteps.INITIALISED_PREGNANT) && (myWorld.random.nextDouble() <= myPregnancyLikelihood)) {
 						nextStep = BirthSteps.SCHEDULE_PREGNANCY;
 					}
+					
+					// In the initial set up, we will have some women who will be pregnant before the simulation starts who will need to start the 
+					// simulation pregnant. We will also have some women in the first month (before this event runs again in month 2) become pregnant
+					
 					switch (nextStep) {
 					case INITIALISED_PREGNANT:{
+						// Here we schedule pregnancy for women in the simulation who would be pregnant in the first months
 						target.setPregnant(true);
+						// Some of these will be twins
+						multiplePregnancy = (myWorld.random.nextDouble() < prob_multiple_pregnancy);
+
 						int dayToCauseBirth = determine_birth_date(this);
 						this.tickToCauseBirth = (currentDay + dayToCauseBirth) * world.params.ticks_per_day;
 //						System.out.println("First nine months scheduled to give birth on " + (currentDay + dayToCauseBirth));
@@ -584,6 +591,14 @@ public class Demography {
 
 	public void setPtb_base_rate(double ptb_base_rate) {
 		this.ptb_base_rate = ptb_base_rate;
+	}
+	
+	public double getProb_multiple_pregnancy() {
+		return prob_multiple_pregnancy;
+	}
+
+	public void setProb_multiple_pregnancy(double prob_multiple_pregnancy) {
+		this.prob_multiple_pregnancy = prob_multiple_pregnancy;
 	}
 
 	

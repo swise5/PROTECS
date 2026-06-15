@@ -153,7 +153,7 @@ public class PregnancyTest extends TestWatcherSetup{
 		int seed = (int) this.seed;		
 
 		// set up the simulation
-		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_demography.txt");
+		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
 		sim.start();
 		// set dummy values for ptb
 		sim.demographyFramework.setPtb_base_rate(0.5);
@@ -174,6 +174,35 @@ public class PregnancyTest extends TestWatcherSetup{
 		
 		Assert.assertTrue(babiesBornPreTerm.size() > 0);
 		Assert.assertTrue(mothersGaveBirthPreTerm.size() > 0);
+
+	}
+	
+	@Test
+	public void testTwinsAreBeingBorn() {
+		int seed = (int) this.seed;		
+
+		// set up the simulation
+		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
+		sim.start();
+		int initial_n_people = sim.agents.size();
+		// Run sim with no twins being born
+		sim.demographyFramework.setProb_multiple_pregnancy(0);
+		int numDays = 9 * 30; 		
+		HelperFunctions.runSimulation(sim, numDays);
+		int no_twins_n_people = sim.agents.size();
+		int no_twin_n_babies = no_twins_n_people - initial_n_people;
+		
+		WorldBankCovid19Sim sim_w_twins = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
+		sim_w_twins.start();
+		// Run sim with every birth being a twin
+		sim_w_twins.demographyFramework.setProb_multiple_pregnancy(1);
+		HelperFunctions.runSimulation(sim_w_twins, numDays);
+		int with_twins_n_people = sim_w_twins.agents.size();
+		int with_twins_n_babies = with_twins_n_people - initial_n_people;
+		Assert.assertTrue(with_twins_n_people > no_twins_n_people);
+		Assert.assertTrue(with_twins_n_babies == 2 * no_twin_n_babies);
+
+
 
 	}
 	
