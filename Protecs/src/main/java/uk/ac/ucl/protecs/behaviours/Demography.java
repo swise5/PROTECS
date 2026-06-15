@@ -29,15 +29,17 @@ public class Demography {
 	public ArrayList <Integer> birth_age_params;
 	public ArrayList <Double> prob_birth_by_age;
 	
-	// PTB risk factor parameters TODO: fill with values
+	// PTB risk factor parameters, taken from https://link.springer.com/article/10.1186/s13052-020-0772-1 meta review in east Africa
 	public double ptb_base_rate = 0;
-	public double ptb_rr_age_less_than_20_years = 1;
-	public double ptb_rr_age_more_than_35_years = 1;
-	public double ptb_rr_hiv = 1;
-	public double ptb_rr_malaria = 1;
-	public double ptb_rr_prior_ptb = 1;
-	public double ptb_rr_underweight = 1;
-
+	public double ptb_AOR_age_less_than_20_years = 1.76;
+	public double ptb_AOR_short_birth_interval = 2.03;
+	public double ptb_AOR_previous_ptb = 3.45;
+	public double ptb_AOR_anemia = 4.58;
+	public double ptb_AOR_hiv = 2.59;
+	public double ptb_AOR_malaria = 3.08;
+	public double ptb_AOR_multiple_pregnancy = 3.08;
+	
+	public double prob_multiple_pregnancy = 0.0174; // https://www.cambridge.org/core/journals/twin-research-and-human-genetics/article/twin-births-in-42-subsaharan-african-countries-from-1986-to-2016-frequency-trends-and-factors-of-variation/39A88B150744A794DDBF816FFA7F5950?utm_source=chatgpt.com
 	
 	enum MortalitySteps {
 		DEATH,
@@ -169,6 +171,8 @@ public class Demography {
 		int ticksToUpdatePregnancy = Integer.MAX_VALUE;
 		int daysToRescheduleNextBirth = Integer.MAX_VALUE;
 		boolean ptb = false;
+		boolean multiplePregnancy = false;
+		boolean shortBirthInterval = false;
 		boolean initialSetUp = true;
 		WorldBankCovid19Sim world;
 		public Births( Person p, WorldBankCovid19Sim myWorld ) {
@@ -247,6 +251,11 @@ public class Demography {
 					case SCHEDULE_PREGNANCY:{
 						// schedule day for the pregnancy
 						int dayToCausePregnancy = myWorld.random.nextInt(30);
+						// determine in this pregnancy will be twins (assume only twins)
+						multiplePregnancy = (myWorld.random.nextDouble() < prob_multiple_pregnancy);
+						// check if prior pregnancy has occurred and if it is too short of a duration // TODO: make birth interval more sensible
+						shortBirthInterval = (currentDay + dayToCausePregnancy - target.getDate_last_birth() < 24 * 30);
+
 						// create a corresponding start of pregnancy
 						this.ticksToUpdatePregnancy = (currentDay + dayToCausePregnancy) * world.params.ticks_per_day;
 //						System.out.println("Starting pregnancy on " + (currentDay + dayToCausePregnancy));
@@ -290,8 +299,12 @@ public class Demography {
 			
 				switch (nextStep) {
 					case BIRTH:{
-						
+						// create a birth
 						createBirth(myWorld, target.isAlive(), this.ptb);
+						// if they have twins, track it here
+						if (this.multiplePregnancy) {
+							createBirth(myWorld, target.isAlive(), this.ptb);
+						}
 						postBirthRescheduling(myWorld, target.isAlive());
 						break;
 					}
@@ -309,6 +322,9 @@ public class Demography {
 					case SCHEDULE_PREGNANCY:{
 						// schedule day for the pregnancy
 						int dayToCausePregnancy = myWorld.random.nextInt(30);
+						multiplePregnancy = (myWorld.random.nextDouble() < prob_multiple_pregnancy);
+						shortBirthInterval = (currentDay + dayToCausePregnancy - target.getDate_last_birth() < 24 * 30);
+
 						this.ticksToUpdatePregnancy = (currentDay + dayToCausePregnancy) * world.params.ticks_per_day;
 //						System.out.println("Starting pregnancy on " + (currentDay + dayToCausePregnancy));
 
@@ -345,8 +361,8 @@ public class Demography {
 				int baby_age = 0;
 				// although we use an enum for biological sex, upon creation of a person a string is passed to choose sex. This is because
 				List<SEX> sexList = Arrays.asList(SEX.MALE, SEX.FEMALE);
-				SEX sexAssigned = sexList.get(world.random.nextInt(sexList.size()));
 				OCCUPATION babiesJob = OCCUPATION.UNEMPLOYED;
+				SEX sexAssigned = sexList.get(world.random.nextInt(sexList.size()));
 				Household babyHousehold = target.getHouseholdAsType();
 				Workplace babyWorkplace = null;
 				boolean babySchooling = false;
@@ -378,6 +394,7 @@ public class Demography {
 				// if baby is born pre-term, set this property
 				if (this.ptb) {
 					baby.setBornPreTerm(true);
+					target.setPriorPreTerm(isPreTerm);
 				}
 			}
 		// reset if they are pregnant or not
@@ -397,27 +414,27 @@ public class Demography {
 		else {
 			birthdate = 9 * 30 * BirthChecker.world.params.ticks_per_day + BirthChecker.ticksToUpdatePregnancy;
 			}
-		double prob_ptb = ptb_base_rate;
-		if (BirthChecker.target.getAge() < 20) {
-			prob_ptb *= ptb_rr_age_less_than_20_years;
-		}
-		else if (BirthChecker.target.getAge() > 35) {
-			prob_ptb *= ptb_rr_age_more_than_35_years;
-		}
-		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.HIV.key)) {
-			prob_ptb *= ptb_rr_hiv;
-		}
-		if (BirthChecker.target.hasPriorPreTerm()) {
-			prob_ptb *= ptb_rr_prior_ptb;
-		}
-		if (BirthChecker.target.getBmistatus().equals(BMIStatus.UNDERWEIGHT)) {
-			prob_ptb *= ptb_rr_underweight;
-		}
+		
+		double baseline_odds = Math.log(ptb_base_rate / (1 - ptb_base_rate));
+		double logit = baseline_odds;
+		if (BirthChecker.target.getAge() < 20) logit += Math.log(ptb_AOR_age_less_than_20_years);
+		if (BirthChecker.shortBirthInterval) logit += Math.log(ptb_AOR_short_birth_interval);
+		if (BirthChecker.target.hasPriorPreTerm()) logit += Math.log(ptb_AOR_previous_ptb);
+		if (BirthChecker.target.hasDietary_iron_deficiency()) logit += Math.log(ptb_AOR_anemia);
+		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.HIV.key)) logit += Math.log(ptb_AOR_hiv);
+		if (BirthChecker.target.getDiseaseSet().containsKey("MALARIA")) logit += Math.log(ptb_AOR_malaria); // TODO create malaria
+		if (BirthChecker.multiplePregnancy) logit += Math.log(ptb_AOR_multiple_pregnancy);
+		// convert logit to probability
+		double prob_ptb = 1.0 / (1.0 + Math.exp(-logit));
 		BirthChecker.ptb = BirthChecker.world.random.nextDouble() < prob_ptb;
 		if (BirthChecker.ptb) {
 			// TODO PTB earliness distribution
 			birthdate -= 30;
 		}
+		// Finally, if this is the inital set up births and the birth is scheduled before the start of the sim, 
+		// just set the birth date to 0
+		if (birthdate < 0) birthdate = 0;
+		
 		return birthdate;
 	}
 
@@ -560,5 +577,14 @@ public class Demography {
 
 			}
 	}
+	
+	public double getPtb_base_rate() {
+		return ptb_base_rate;
+	}
+
+	public void setPtb_base_rate(double ptb_base_rate) {
+		this.ptb_base_rate = ptb_base_rate;
+	}
+
 	
 }

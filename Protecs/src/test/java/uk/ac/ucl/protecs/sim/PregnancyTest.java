@@ -18,6 +18,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -145,6 +146,35 @@ public class PregnancyTest extends TestWatcherSetup{
 		Assert.assertTrue(initialNumberOfPeople == finalNumberOfPeople);
 
 		
+	}
+	
+	@Test
+	public void testPreTermBirthsOccur() {
+		int seed = (int) this.seed;		
+
+		// set up the simulation
+		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_demography.txt");
+		sim.start();
+		// set dummy values for ptb
+		sim.demographyFramework.setPtb_base_rate(0.5);
+		int numDays = 9 * 30; 		
+		// run for 9 months so that the initial pregnancies will have caused ptb
+		HelperFunctions.runSimulation(sim, numDays);
+		ArrayList <Person> babiesBornPreTerm = new ArrayList<Person>();
+		ArrayList <Person> mothersGaveBirthPreTerm = new ArrayList<Person>();
+
+		for (Person p: sim.agents) {
+			if (p.isBornPreTerm()) {
+				babiesBornPreTerm.add(p);
+			}
+			if (p.hasPriorPreTerm()) {
+				mothersGaveBirthPreTerm.add(p);
+			}
+		}
+		
+		Assert.assertTrue(babiesBornPreTerm.size() > 0);
+		Assert.assertTrue(mothersGaveBirthPreTerm.size() > 0);
+
 	}
 	
 	// ================================================ Helper functions =======================================================================

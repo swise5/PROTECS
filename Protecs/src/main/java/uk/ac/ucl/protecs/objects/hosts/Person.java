@@ -81,6 +81,8 @@ public class Person extends Host {
 	// Birth status
 	boolean bornPreTerm = false;
 	boolean priorPreTerm = false;
+	int date_last_birth = - 9999;
+
 
 	// Malnutrition
 	public enum BMIStatus{UNDERWEIGHT, HEALTHYWEIGHT, OVERWEIGHT, OBESE}
@@ -94,8 +96,8 @@ public class Person extends Host {
 	boolean iodine_malnutrition = false;
 	boolean vitamin_A_deficiency = false;
 	boolean dietary_iron_deficiency = false;
-	
-	
+
+
 	// bubble interaction counters
 	int number_of_interactions_at_work = Integer.MIN_VALUE;
 	int number_of_interactions_at_work_happened = 0;
@@ -716,6 +718,14 @@ public class Person extends Host {
 		this.priorPreTerm = priorPreTerm;
 	}
 	
+	
+	public boolean hasDietary_iron_deficiency() {
+		return dietary_iron_deficiency;
+	}
+
+	public void setDietary_iron_deficiency(boolean dietary_iron_deficiency) {
+		this.dietary_iron_deficiency = dietary_iron_deficiency;
+	}
 	public boolean inAgeRange(int[] range) {
 		boolean toReturn = false;
 		if ((range[0] <= this.getAge()) && (this.getAge() <= range[1])) {
@@ -723,6 +733,14 @@ public class Person extends Host {
 		}
 		
 		return toReturn;
+	}
+
+	public int getDate_last_birth() {
+		return date_last_birth;
+	}
+
+	public void setDate_last_birth(int date_last_birth) {
+		this.date_last_birth = date_last_birth;
 	}
 	
 	public void fetchWater(Water waterFrom, Water waterTo) {
