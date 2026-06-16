@@ -223,7 +223,7 @@ public class PregnancyTest extends TestWatcherSetup{
 		sim.demographyFramework.setPtb_AOR_malaria(0);
 		sim.demographyFramework.setPtb_AOR_multiple_pregnancy(0);
 		
-		int numDays = 100; 		
+		int numDays = 200; 		
  		HelperFunctions.runSimulation(sim, numDays);
 		ArrayList <Person> baseRateBabiesBornPreTerm = new ArrayList<Person>();
 

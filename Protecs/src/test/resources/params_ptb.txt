@@ -24,5 +24,5 @@ birth_rate_filename: calibrated_birth_rate.txt
 communityLocationFilename: community_loc_empty.txt
 loggingAgeBoundaryFilename: logging_age_boundaries.txt
 
-prevalence_line_list_filename: GBD_South_Sudan_HIV_Prevalence_2023.csv
+prevalence_line_list_filename: Dummy_HIV_Prevalence.csv
 
