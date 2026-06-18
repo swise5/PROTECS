@@ -12,6 +12,7 @@ import sim.engine.SimState;
 import sim.engine.Steppable;
 import uk.ac.ucl.protecs.objects.diseases.Disease;
 import uk.ac.ucl.protecs.objects.hosts.Person;
+import uk.ac.ucl.protecs.objects.hosts.Person.BMIStatus;
 import uk.ac.ucl.protecs.objects.hosts.Person.OCCUPATION;
 import uk.ac.ucl.protecs.objects.hosts.Person.SEX;
 import uk.ac.ucl.protecs.objects.locations.Household;
@@ -37,8 +38,15 @@ public class Demography {
 	public double ptb_AOR_hiv = 2.59;
 	public double ptb_AOR_malaria = 3.08;
 	public double ptb_AOR_multiple_pregnancy = 3.08;
-	
-	public double prob_multiple_pregnancy = 0.0174; // https://www.cambridge.org/core/journals/twin-research-and-human-genetics/article/twin-births-in-42-subsaharan-african-countries-from-1986-to-2016-frequency-trends-and-factors-of-variation/39A88B150744A794DDBF816FFA7F5950?utm_source=chatgpt.com
+	public double ptb_AOR_underweight = 4.52;
+
+	public double prob_multiple_pregnancy = 0.0174; // https://www.cambridge.org/core/journals/twin-research-and-human-genetics/article/twin-births-in-42-subsaharan-african-countries-from-1986-to-2016-frequency-trends-and-factors-of-variation/39A88B150744A794DDBF816FFA7F5950
+
+	public double median_birth_interval = 32; // median birth interval in SSA is 32 months https://link.springer.com/article/10.1186/s40834-026-00448-w
+
+
+	public double q1_birth_interval = 23; // q1 birth interval in SSA is 23 months https://link.springer.com/article/10.1186/s40834-026-00448-w
+	public double q3_birth_interval = 46;// q3 birth interval in SSA is 46 months https://link.springer.com/article/10.1186/s40834-026-00448-w
 
 	enum MortalitySteps {
 		DEATH,
@@ -195,10 +203,16 @@ public class Demography {
 				// reschedule the check to occur next year
 				int currentTime = (int) arg0.schedule.getTime();
 				int currentDay = (int) currentTime / world.params.ticks_per_day;
-				int currentYear = (int) Math.floor(currentTime / world.params.ticks_per_year);
-				int nextYear = (currentYear + 1);
-				this.ticksUntilNextBirthCheck = (nextYear * 365 + currentDay) * world.params.ticks_per_day;
-				arg0.schedule.scheduleOnce((nextYear * 365 + currentDay) * world.params.ticks_per_day, this);
+				// draw the birth interval randomly using a log-normal distribution
+				double mu = Math.log(median_birth_interval);
+				double sigma = (Math.log(q3_birth_interval) - Math.log(q1_birth_interval)) / 1.349;
+				double months_between_births = Math.exp(mu + sigma * arg0.random.nextGaussian());
+				// if months between births is greater than nine, minus nine months from it to represent the pregnancy duration
+				if (months_between_births > 9) months_between_births -= 9;
+				int days_between_births = (int) months_between_births * 30;
+				// offset by days between births plus one day in case the model randomly generates a near immediate potential birth interval
+				this.ticksUntilNextBirthCheck = (days_between_births + 1 + currentDay) * world.params.ticks_per_day;
+				arg0.schedule.scheduleOnce((days_between_births + 1 + currentDay) * world.params.ticks_per_day, this);
 			}
 		}
 		private void determineGivingBirth(SimState myWorld, Person target, Boolean initialSetUp) {
@@ -261,7 +275,7 @@ public class Demography {
 						// determine in this pregnancy will be twins (assume only twins)
 						multiplePregnancy = (myWorld.random.nextDouble() < prob_multiple_pregnancy);
 						// check if prior pregnancy has occurred and if it is too short of a duration // TODO: make birth interval more sensible
-						shortBirthInterval = (currentDay + dayToCausePregnancy - target.getDate_last_birth() < 24 * 30);
+						shortBirthInterval = (currentDay + dayToCausePregnancy - target.getDateGaveBirth() < 24 * 30);
 
 						// create a corresponding start of pregnancy
 						this.ticksToUpdatePregnancy = (currentDay + dayToCausePregnancy) * world.params.ticks_per_day;
@@ -330,7 +344,7 @@ public class Demography {
 						// schedule day for the pregnancy
 						int dayToCausePregnancy = myWorld.random.nextInt(30);
 						multiplePregnancy = (myWorld.random.nextDouble() < prob_multiple_pregnancy);
-						shortBirthInterval = (currentDay + dayToCausePregnancy - target.getDate_last_birth() < 24 * 30);
+						shortBirthInterval = (currentDay + dayToCausePregnancy - target.getDateGaveBirth() < 24 * 30);
 
 						this.ticksToUpdatePregnancy = (currentDay + dayToCausePregnancy) * world.params.ticks_per_day;
 //						System.out.println("Starting pregnancy on " + (currentDay + dayToCausePregnancy));
@@ -428,6 +442,7 @@ public class Demography {
 		if (BirthChecker.shortBirthInterval) logit += Math.log(ptb_AOR_short_birth_interval);
 		if (BirthChecker.target.hasPriorPreTerm()) logit += Math.log(ptb_AOR_previous_ptb);
 		if (BirthChecker.target.hasDietary_iron_deficiency()) logit += Math.log(ptb_AOR_anemia);
+		if (BirthChecker.target.getBmistatus().equals(BMIStatus.UNDERWEIGHT)) logit += Math.log(ptb_AOR_underweight); // TODO create bmi status prevalence
 		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.HIV.key)) logit += Math.log(ptb_AOR_hiv);
 		if (BirthChecker.target.getDiseaseSet().containsKey("MALARIA")) logit += Math.log(ptb_AOR_malaria); // TODO create malaria
 		if (BirthChecker.multiplePregnancy) logit += Math.log(ptb_AOR_multiple_pregnancy);
@@ -654,6 +669,22 @@ public class Demography {
 
 	public void setPtb_AOR_multiple_pregnancy(double ptb_AOR_multiple_pregnancy) {
 		this.ptb_AOR_multiple_pregnancy = ptb_AOR_multiple_pregnancy;
+	}
+	
+	public double getPtb_AOR_underweight() {
+		return ptb_AOR_underweight;
+	}
+
+	public void setPtb_AOR_underweight(double ptb_AOR_underweight) {
+		this.ptb_AOR_underweight = ptb_AOR_underweight;
+	}
+	
+	public double getMedian_birth_interval() {
+		return median_birth_interval;
+	}
+
+	public void setMedian_birth_interval(double median_birth_interval) {
+		this.median_birth_interval = median_birth_interval;
 	}
 	
 }

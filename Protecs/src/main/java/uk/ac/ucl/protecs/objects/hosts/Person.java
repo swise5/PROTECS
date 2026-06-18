@@ -81,7 +81,6 @@ public class Person extends Host {
 	// Birth status
 	boolean bornPreTerm = false;
 	boolean priorPreTerm = false;
-	int date_last_birth = - 9999;
 
 
 	// Malnutrition
@@ -693,7 +692,10 @@ public class Person extends Host {
 	public boolean isAdult() {
 		return this.age > 18;
 	}
-
+	
+	public void setAgeForTesting(int age_to_set) {
+		this.age = age_to_set;
+	}
 	public BMIStatus getBmistatus() {
 		return bmistatus;
 	}
@@ -735,13 +737,6 @@ public class Person extends Host {
 		return toReturn;
 	}
 
-	public int getDate_last_birth() {
-		return date_last_birth;
-	}
-
-	public void setDate_last_birth(int date_last_birth) {
-		this.date_last_birth = date_last_birth;
-	}
 	
 	public void fetchWater(Water waterFrom, Water waterTo) {
 		// fetch the water, assume that this is only collection of water and not consuming it.
