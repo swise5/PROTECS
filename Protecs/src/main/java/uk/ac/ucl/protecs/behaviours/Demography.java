@@ -47,6 +47,17 @@ public class Demography {
 
 	public double q1_birth_interval = 23; // q1 birth interval in SSA is 23 months https://link.springer.com/article/10.1186/s40834-026-00448-w
 	public double q3_birth_interval = 46;// q3 birth interval in SSA is 46 months https://link.springer.com/article/10.1186/s40834-026-00448-w
+	
+	// generate a distribution for the weeks born preterm
+	public double ptb_prob_born_before_28_weeks = 0.042; // global estimates from https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(23)00878-4/fulltext?uuid=uuid%3A1db73a17-556f-469a-b546-6bcb66dee6f5#supplementary-material
+	public double ptb_prob_born_28_32_weeks = 0.104;// https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(23)00878-4/fulltext?uuid=uuid%3A1db73a17-556f-469a-b546-6bcb66dee6f5#supplementary-material
+	public double ptb_prob_born_32_39_weeks = 0.854;// https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(23)00878-4/fulltext?uuid=uuid%3A1db73a17-556f-469a-b546-6bcb66dee6f5#supplementary-material
+	
+	List<Double> ptbDistributionOfWeeksBornEarly = Arrays.asList(
+		    ptb_prob_born_before_28_weeks,
+		    ptb_prob_born_before_28_weeks + ptb_prob_born_28_32_weeks,
+		    ptb_prob_born_before_28_weeks + ptb_prob_born_28_32_weeks + ptb_prob_born_32_39_weeks
+		);
 
 	enum MortalitySteps {
 		DEATH,
@@ -449,15 +460,38 @@ public class Demography {
 		// convert logit to probability
 		double prob_ptb = 1.0 / (1.0 + Math.exp(-logit));
 		BirthChecker.ptb = BirthChecker.world.random.nextDouble() < prob_ptb;
+		
 		if (BirthChecker.ptb) {
-			// TODO PTB earliness distribution
-			birthdate -= 30;
+			double weeks_early = determine_ptb_weeks_early(BirthChecker);
+			birthdate -= weeks_early * 7;
 		}
 		// Finally, if this is the inital set up births and the birth is scheduled before the start of the sim, 
 		// just set the birth date to 0
 		if (birthdate < 0) birthdate = 0;
 		
 		return birthdate;
+	}
+
+	private double determine_ptb_weeks_early(Births BirthChecker) {
+		double rand = BirthChecker.world.random.nextDouble();
+		int checker = 0;
+		double weeks_to_return;
+		for (double i: ptbDistributionOfWeeksBornEarly) {
+			if (rand < i) {
+				break;
+			}
+			checker ++;
+		}
+		if (checker == 0) {
+			weeks_to_return = 39 - 27;
+		}
+		if (checker == 1) {
+			weeks_to_return = 39 - 30;
+		}
+		else {
+			weeks_to_return = 39 - 35.5;
+		}
+		return weeks_to_return;
 	}
 
 	public void setAll_cause_death_age_params(ArrayList<Integer> all_cause_death_age_params) {
