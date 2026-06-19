@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import uk.ac.ucl.protecs.behaviours.diseaseProgression.HIVDiseaseProgressionFramework;
+import uk.ac.ucl.protecs.behaviours.diseaseProgression.MalariaDiseaseProgressionFramework;
 import uk.ac.ucl.protecs.objects.diseases.HIV;
+import uk.ac.ucl.protecs.objects.diseases.Malaria;
 import uk.ac.ucl.protecs.objects.hosts.Person;
 import uk.ac.ucl.protecs.objects.hosts.Person.SEX;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.DISEASE;
@@ -59,6 +61,14 @@ public class loadEndemicConditions{
 	        							}
 	                                HIV inf = new HIV(p, null, world.hivFramework.getEntryPoint(), world, 0);
 	                                world.schedule.scheduleOnce(inf, world.param_schedule_infecting);
+	                            }
+	                            case MALARIA:{
+	                            	if (world.malariaFramework == null) {
+	        							world.malariaFramework = new MalariaDiseaseProgressionFramework(world);
+	        							}
+	                            	Malaria inf = new Malaria(p, null, world.malariaFramework.getEntryPoint(), world, 0);
+	                                world.schedule.scheduleOnce(inf, world.param_schedule_infecting);
+
 	                            }
 	                            default: {
 	                                // no-op for now

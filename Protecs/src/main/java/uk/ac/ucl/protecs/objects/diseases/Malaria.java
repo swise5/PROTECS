@@ -8,15 +8,28 @@ import uk.ac.ucl.swise.behaviours.BehaviourNode;
 
 public class Malaria extends Disease{
 
-	public Malaria(Person p, WorldBankCovid19Sim sim, BehaviourNode initNode, int time) {
-		this.host = p;
-		this.source = p;
-		this.infectedAtLocation = p.getLocation();
-		this.currentBehaviourNode = initNode;
-		this.time_infected = time;
-		this.myWorld = sim;
-		this.myWorld.human_infections.add(this);
-		this.host.addDisease(this);
+	public Malaria(Person myHost, Person mySource, BehaviourNode initNode, WorldBankCovid19Sim sim){
+		this(myHost, mySource, initNode, sim, (int) sim.schedule.getTime());
+	}
+
+	public Malaria(Person myHost, Person mySource, BehaviourNode initNode, WorldBankCovid19Sim sim, int time){
+		
+		host = myHost;
+		myHost.addDisease(this);
+		source = mySource;
+		
+		//	epidemic_state = Params.state_susceptible;
+		//	infected_symptomatic_status = Params.symptom_none;
+		//	clinical_state = Params.clinical_not_hospitalized;
+			
+		// store the time when it is infected!
+		time_infected = time;		
+		infectedAtLocation = myHost.getLocation();
+		
+		time_died = Double.MAX_VALUE;
+		currentBehaviourNode = initNode;
+		myWorld = sim;
+		myWorld.human_infections.add(this);
 	}
 	
 	@Override
@@ -50,12 +63,12 @@ public class Malaria extends Disease{
 
 	@Override
 	public DISEASE getDiseaseType() {
-		return null;
+		return DISEASE.MALARIA;
 	}
 
 	@Override
 	public String getDiseaseName() {
-		return null;
+		return DISEASE.MALARIA.key;
 	}
 
 	@Override

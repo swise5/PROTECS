@@ -9,6 +9,7 @@ import java.util.Random;
 import uk.ac.ucl.protecs.behaviours.*;
 import uk.ac.ucl.protecs.behaviours.diseaseProgression.DummyWaterborneDiseaseProgressionFramework;
 import uk.ac.ucl.protecs.behaviours.diseaseProgression.HIVDiseaseProgressionFramework;
+import uk.ac.ucl.protecs.behaviours.diseaseProgression.MalariaDiseaseProgressionFramework;
 import uk.ac.ucl.protecs.behaviours.diseaseProgression.DummyNonCommunicableDiseaseProgressionFramework;
 import uk.ac.ucl.protecs.objects.diseases.Disease;
 import uk.ac.ucl.protecs.objects.hosts.Person;
@@ -62,6 +63,7 @@ public class WorldBankCovid19Sim extends SimState {
 	public DummyInfectiousDiseaseProgressionFramework dummyInfectiousFramework = null;
 	public CholeraDiseaseProgressionFramework choleraFramework = null;
 	public HIVDiseaseProgressionFramework hivFramework = null;
+	public MalariaDiseaseProgressionFramework malariaFramework = null;
 	
 	public Demography demographyFramework = null;
 	public Params params = null;
@@ -145,7 +147,7 @@ public class WorldBankCovid19Sim extends SimState {
         		return MALNUTRITION;
         	case "Protein-energy malnutrition":
         		return MALNUTRITION;
-        	case "MALARIA":
+        	case "Malaria":
         		return MALARIA;
         	default:
         		throw new IllegalArgumentException();
