@@ -219,6 +219,8 @@ public class PregnancyTest extends TestWatcherSetup{
 		// set up the simulation
 		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
 		sim.start();
+		HelperFunctions.setParameterListsToValue(sim, sim.demographyFramework.getProb_birth_by_age(), 0.5);
+
 		// make every birth be twins
 		sim.demographyFramework.setProb_multiple_pregnancy(1);
 
@@ -240,6 +242,8 @@ public class PregnancyTest extends TestWatcherSetup{
 		// set up a sim with twins
 		WorldBankCovid19Sim sim_w_twins = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
 		sim_w_twins.start();
+		HelperFunctions.setParameterListsToValue(sim_w_twins, sim_w_twins.demographyFramework.getProb_birth_by_age(), 0.5);
+
 		sim_w_twins.demographyFramework.setProb_multiple_pregnancy(1);
 
 		// set dummy values for ptb
@@ -270,7 +274,7 @@ public class PregnancyTest extends TestWatcherSetup{
 		// set up the simulation
 		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
 		sim.start();
-		HelperFunctions.setParameterListsToValue(sim, sim.demographyFramework.getProb_birth_by_age(), 0.1);
+		HelperFunctions.setParameterListsToValue(sim, sim.demographyFramework.getProb_birth_by_age(), 0.5);
 
 		// set dummy values for ptb
 		sim.demographyFramework.setPtb_base_rate(0.1);
@@ -294,7 +298,7 @@ public class PregnancyTest extends TestWatcherSetup{
 		
 		WorldBankCovid19Sim sim_w_previous_ptb = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
 		sim_w_previous_ptb.start();
-		HelperFunctions.setParameterListsToValue(sim_w_previous_ptb, sim_w_previous_ptb.demographyFramework.getProb_birth_by_age(), 0.1);
+		HelperFunctions.setParameterListsToValue(sim_w_previous_ptb, sim_w_previous_ptb.demographyFramework.getProb_birth_by_age(), 0.5);
 		// make everyone have a prior pre term birth
 
 		for (Person p: sim_w_previous_ptb.agents) {
@@ -391,7 +395,7 @@ public class PregnancyTest extends TestWatcherSetup{
 		// set up the simulation
 		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
 		sim.start();
-		HelperFunctions.setParameterListsToValue(sim, sim.demographyFramework.getProb_birth_by_age(), 0.1);
+		HelperFunctions.setParameterListsToValue(sim, sim.demographyFramework.getProb_birth_by_age(), 0.5);
 
 		// set dummy values for ptb
 		sim.demographyFramework.setPtb_base_rate(0.1);
@@ -412,7 +416,7 @@ public class PregnancyTest extends TestWatcherSetup{
 		WorldBankCovid19Sim sim_w_hiv = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
 		sim_w_hiv.start();
 		
-		HelperFunctions.setParameterListsToValue(sim_w_hiv, sim_w_hiv.demographyFramework.getProb_birth_by_age(), 0.1);
+		HelperFunctions.setParameterListsToValue(sim_w_hiv, sim_w_hiv.demographyFramework.getProb_birth_by_age(), 0.5);
 
 		// set dummy values for ptb
 		sim_w_hiv.demographyFramework.setPtb_base_rate(0.1);
@@ -434,12 +438,63 @@ public class PregnancyTest extends TestWatcherSetup{
 	}
 	
 	@Test
+	public void testMalariaRiskFactorIncreasesPTB() {
+		int seed = (int) this.seed;		
+
+		// set up the simulation
+		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
+		sim.start();
+		HelperFunctions.setParameterListsToValue(sim, sim.demographyFramework.getProb_birth_by_age(), 0.5);
+
+		// set dummy values for ptb
+		sim.demographyFramework.setPtb_base_rate(0.1);
+		// remove the effects of risk factors
+		remove_ptb_risk_factors(sim);
+		
+		int numDays = 365; 		
+ 		HelperFunctions.runSimulation(sim, numDays);
+ 		// count the babies born preterm without the risk factor
+		ArrayList <Person> baseRateBabiesBornPreTerm = new ArrayList<Person>();
+
+		for (Person p: sim.agents) {
+			if (p.isBornPreTerm()) {
+				baseRateBabiesBornPreTerm.add(p);
+			}
+		}
+		
+		WorldBankCovid19Sim sim_w_malaria = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
+		sim_w_malaria.start();
+		
+		HelperFunctions.setParameterListsToValue(sim_w_malaria, sim_w_malaria.demographyFramework.getProb_birth_by_age(), 0.5);
+
+		// set dummy values for ptb
+		sim_w_malaria.demographyFramework.setPtb_base_rate(0.1);
+		// remove the effects of risk factors apart from HIV
+		remove_ptb_risk_factors(sim_w_malaria);
+		sim_w_malaria.demographyFramework.setPtb_AOR_malaria(3.08);
+		HelperFunctions.runSimulation(sim_w_malaria, numDays);
+		// count the babies born preterm with the reisk factor of malaria being accounted for
+		ArrayList <Person> malariaAffectedRateBabiesBornPreTerm = new ArrayList<Person>();
+
+		for (Person p: sim_w_malaria.agents) {
+			if (p.isBornPreTerm()) {
+				malariaAffectedRateBabiesBornPreTerm.add(p);
+			}
+		}
+		// test that there have been more babies born preterm with malaria as a risk factor than without
+		Assert.assertTrue(malariaAffectedRateBabiesBornPreTerm.size() > baseRateBabiesBornPreTerm.size());
+
+	}
+	
+	@Test
 	public void testAnemiaRiskFactorIncreasesPTB() {
 		int seed = (int) this.seed;		
 
 		// set up the simulation
 		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
 		sim.start();
+		HelperFunctions.setParameterListsToValue(sim, sim.demographyFramework.getProb_birth_by_age(), 0.5);
+
 		// Make the population have anemia
 		for (Person p: sim.agents) {
 					
@@ -463,6 +518,8 @@ public class PregnancyTest extends TestWatcherSetup{
 		
 		WorldBankCovid19Sim sim_w_anemia = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
 		sim_w_anemia.start();
+		HelperFunctions.setParameterListsToValue(sim_w_anemia, sim_w_anemia.demographyFramework.getProb_birth_by_age(), 0.5);
+
 		// Make the population have anemia
 		for (Person p: sim_w_anemia.agents) {
 			
@@ -550,7 +607,7 @@ public class PregnancyTest extends TestWatcherSetup{
 		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
 		sim.start();
 		// increase the birth rate
-		HelperFunctions.setParameterListsToValue(sim, sim.demographyFramework.getProb_birth_by_age(), 0.05);
+		HelperFunctions.setParameterListsToValue(sim, sim.demographyFramework.getProb_birth_by_age(), 0.5);
 
 		// set dummy values for ptb
 		sim.demographyFramework.setPtb_base_rate(0.1);
@@ -574,7 +631,7 @@ public class PregnancyTest extends TestWatcherSetup{
 		WorldBankCovid19Sim sim_w_underweight = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
 		sim_w_underweight.start();
 		// increase the birth rate
-		HelperFunctions.setParameterListsToValue(sim_w_underweight, sim_w_underweight.demographyFramework.getProb_birth_by_age(), 0.05);
+		HelperFunctions.setParameterListsToValue(sim_w_underweight, sim_w_underweight.demographyFramework.getProb_birth_by_age(), 0.5);
 		// set dummy values for ptb
 		sim_w_underweight.demographyFramework.setPtb_base_rate(0.1);
 

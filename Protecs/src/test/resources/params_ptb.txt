@@ -24,5 +24,5 @@ birth_rate_filename: calibrated_birth_rate.txt
 communityLocationFilename: community_loc_empty.txt
 loggingAgeBoundaryFilename: logging_age_boundaries.txt
 
-prevalence_line_list_filename: Dummy_HIV_Prevalence.csv
+prevalence_line_list_filename: Dummy_Malaria_HIV_Prevalence.csv
 

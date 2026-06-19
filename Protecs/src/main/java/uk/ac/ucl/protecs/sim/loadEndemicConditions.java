@@ -61,6 +61,7 @@ public class loadEndemicConditions{
 	        							}
 	                                HIV inf = new HIV(p, null, world.hivFramework.getEntryPoint(), world, 0);
 	                                world.schedule.scheduleOnce(inf, world.param_schedule_infecting);
+	                                break;
 	                            }
 	                            case MALARIA:{
 	                            	if (world.malariaFramework == null) {
@@ -68,7 +69,7 @@ public class loadEndemicConditions{
 	        							}
 	                            	Malaria inf = new Malaria(p, null, world.malariaFramework.getEntryPoint(), world, 0);
 	                                world.schedule.scheduleOnce(inf, world.param_schedule_infecting);
-
+	                                break;
 	                            }
 	                            default: {
 	                                // no-op for now
