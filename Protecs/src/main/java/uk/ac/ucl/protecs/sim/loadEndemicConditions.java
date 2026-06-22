@@ -71,6 +71,10 @@ public class loadEndemicConditions{
 	                                world.schedule.scheduleOnce(inf, world.param_schedule_infecting);
 	                                break;
 	                            }
+	                            case ANEMIA:{
+	                            	p.setDietary_iron_deficiency(true);
+	                            	break;
+	                            }
 	                            default: {
 	                                // no-op for now
 	                            }

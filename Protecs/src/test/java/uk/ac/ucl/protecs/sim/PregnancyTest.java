@@ -520,12 +520,6 @@ public class PregnancyTest extends TestWatcherSetup{
 		sim_w_anemia.start();
 		HelperFunctions.setParameterListsToValue(sim_w_anemia, sim_w_anemia.demographyFramework.getProb_birth_by_age(), 0.5);
 
-		// Make the population have anemia
-		for (Person p: sim_w_anemia.agents) {
-			
-			p.setDietary_iron_deficiency(true);
-			
-		}
 		// set dummy values for ptb
 		sim_w_anemia.demographyFramework.setPtb_base_rate(0.1);
 		remove_ptb_risk_factors(sim_w_anemia);
