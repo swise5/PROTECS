@@ -47,15 +47,7 @@ public class DemographyLogging {
 
 			}			
 			// create a function to group the population by sex, age and whether they gave birth
-			Map<SEX, Map<Integer, Map<Boolean, Map<Boolean, Long>>>> age_sex_map_gave_birth = new EnumMap<>(SEX.class);
-			
-			for (Person p: world.agents) {
-				age_sex_map_gave_birth
-				.computeIfAbsent(p.getSex(), k -> new HashMap<>())
-				.computeIfAbsent(p.getAge(), k -> new HashMap<>())
-				.computeIfAbsent(p.gaveBirthLastYear(), k -> new HashMap<>())
-				.merge(p.getBirthLogged(), 1l, Long::sum);
-			}
+			Map<SEX, Map<Integer, Map<Boolean, Map<Boolean, Long>>>> age_sex_map_gave_birth = age_sex_gave_birth_map(world);
 			
 //			We now iterate over the age ranges, create a variable to keep track of the iterations
 			Integer idx = 0;
@@ -104,15 +96,68 @@ public class DemographyLogging {
 			// get the day
 			
 			ImportExport.exportMe(world.birthRateOutputFilename, age_dependent_birth_rate, world.timer);
-			// to make sure that births aren't counted more than once, update this person's properties
-			for (Person p: world.agents) {
-				if(p.gaveBirthLastYear()) {
-					p.confirmBirthlogged();
-					}
-				}
+			
 
 			this.firstTimeReporting = false;
 		}
+		
+	}
+	
+	// ====================================== TODO: create logger that tracks how many weeks early a ptb is
+	
+	// ====================================== TODO: create logger that tracks duration between births
+
+	
+	public class PretermBirthReporter implements Steppable {
+		
+		WorldBankCovid19Sim world;
+		boolean firstTimeReporting;
+		
+		public PretermBirthReporter(WorldBankCovid19Sim myWorld) {
+			this.world = myWorld;
+			this.firstTimeReporting = true;
+		}
+
+		@Override
+		public void step(SimState arg0) {
+			// get the number of births and their preterm status
+			
+			Map<Boolean, Map<Boolean, Long>> gave_birth_map = new HashMap<>();
+			Map<Boolean, Map<Boolean, Long>> preterm_map = new HashMap<>();
+
+			for (Person p: world.agents) {
+				gave_birth_map
+				.computeIfAbsent(p.gaveBirthLastYear(), k -> new HashMap<>())
+				.merge(p.getBirthLogged(), 1l, Long::sum);
+				preterm_map
+				.computeIfAbsent(p.isBornPreTerm(), k -> new HashMap<>())
+				.merge(p.isPreTermLogged(), 1l, Long::sum);
+			}
+
+			// calculate the birth rate per 1000 this day
+			int time = (int) (arg0.schedule.getTime() / world.params.ticks_per_day);
+			String ptb_prevalence = "";
+			if (this.firstTimeReporting) {
+				ptb_prevalence += "day" + t + "percent" + "\n" + String.valueOf(time) + t;
+			}
+			else {
+				ptb_prevalence += String.valueOf(time) + t;
+			}
+			double percent_births_preterm = 0.0;
+			try { 
+				int number_births = gave_birth_map.get(true).get(false).intValue();
+				int number_born_preterm = preterm_map.get(true).get(false).intValue();
+				percent_births_preterm = ((double) number_born_preterm / number_births) * 100;
+			}
+			catch (Exception e){
+				
+			}
+			ptb_prevalence += String.valueOf(percent_births_preterm) + "\n";
+			ImportExport.exportMe(world.pretermBirthPrevalenceFilename, ptb_prevalence, world.timer);
+			this.firstTimeReporting = false;
+
+		}
+		
 		
 	}
 	
@@ -410,4 +455,35 @@ public class DemographyLogging {
 		};
 	}
 		
+	public static Steppable ResetDemographyLoggedProperties(WorldBankCovid19Sim world) {
+		return new Steppable() {			
+			@Override
+			public void step(SimState arg0) {
+				// to make sure that births aren't counted more than once, update this person's properties
+					for (Person p: world.agents) {
+				
+						if(p.gaveBirthLastYear()) {
+							p.confirmBirthlogged();
+						}
+						if (p.isBornPreTerm()) {
+							p.setPreTermLogged(true);
+						}		
+					} 
+				}
+			};
+	}
+	
+	private Map<SEX, Map<Integer, Map<Boolean, Map<Boolean, Long>>>> age_sex_gave_birth_map(WorldBankCovid19Sim world) {
+		Map<SEX, Map<Integer, Map<Boolean, Map<Boolean, Long>>>> age_sex_map_gave_birth = new EnumMap<>(SEX.class);
+		
+		for (Person p: world.agents) {
+			age_sex_map_gave_birth
+			.computeIfAbsent(p.getSex(), k -> new HashMap<>())
+			.computeIfAbsent(p.getAge(), k -> new HashMap<>())
+			.computeIfAbsent(p.gaveBirthLastYear(), k -> new HashMap<>())
+			.merge(p.getBirthLogged(), 1l, Long::sum);
+		}
+		return age_sex_map_gave_birth;
+	}
+
 }

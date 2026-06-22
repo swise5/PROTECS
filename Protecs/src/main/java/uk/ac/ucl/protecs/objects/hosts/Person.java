@@ -81,6 +81,7 @@ public class Person extends Host {
 	// Birth status
 	boolean bornPreTerm = false;
 	boolean priorPreTerm = false;
+	boolean preTermLogged = false;
 
 
 	// Malnutrition
@@ -720,6 +721,13 @@ public class Person extends Host {
 		this.priorPreTerm = priorPreTerm;
 	}
 	
+	public boolean isPreTermLogged() {
+		return preTermLogged;
+	}
+
+	public void setPreTermLogged(boolean preTermLogged) {
+		this.preTermLogged = preTermLogged;
+	}
 	
 	public boolean hasDietary_iron_deficiency() {
 		return dietary_iron_deficiency;

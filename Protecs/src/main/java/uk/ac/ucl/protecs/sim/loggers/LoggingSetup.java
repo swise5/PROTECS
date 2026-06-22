@@ -16,6 +16,7 @@ public class LoggingSetup{
 		if (world.params.demography) {
 			world.otherIncDeathOutputFilename = world.outputFilename + "_Incidence_Of_Other_Death";
 			world.birthRateOutputFilename = world.outputFilename + "_Birth_Rate.txt";
+			world.pretermBirthPrevalenceFilename = world.outputFilename + "_Preterm_Birth_Prevalence.txt";
 		}
 		// Check if the covid disease framework has been set up
 		if (!(world.covidInfectiousFramework == null)) {
@@ -99,9 +100,17 @@ public class LoggingSetup{
 			DemographyLogging.BirthRateReporter birthRateLog = logger.new BirthRateReporter(world);
 			// schedule the birth rate reporter (birthRateOutputFilename)
 			world.schedule.scheduleRepeating(birthRateLog, world.param_schedule_reporting, world.params.ticks_per_day);
+			// schedule the preterm birth prevalence reporter (pretermBirthPrevalenceFilename)
+			DemographyLogging.PretermBirthReporter pretermPrevalenceLog = logger.new PretermBirthReporter(world);
+			world.schedule.scheduleRepeating(pretermPrevalenceLog, world.param_schedule_reporting, world.params.ticks_per_day);
+
 //			world.schedule.scheduleOnce(world.params.ticks_per_year, world.param_schedule_reporting, birthRateLog);
 			// schedule the 'other deaths' reporter (otherIncDeathOutputFilename)
 			world.schedule.scheduleRepeating(DemographyLogging.ReportOtherIncidenceOfDeath(world), world.param_schedule_reporting, world.params.ticks_per_day);	
+			
+			// Schedule the resetting of demography reporting properties in the agents
+			Steppable demographyLoggingReset = DemographyLogging.ResetDemographyLoggedProperties(world);
+			world.schedule.scheduleRepeating(demographyLoggingReset, world.param_schedule_reporting_reset, world.params.ticks_per_day);
 		}
 		
 		// schedule covid specific loggers
