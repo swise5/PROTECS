@@ -6,10 +6,12 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import sim.engine.SimState;
 import sim.engine.Steppable;
 import uk.ac.ucl.protecs.objects.hosts.Person;
+import uk.ac.ucl.protecs.objects.hosts.Person.OCCUPATION;
 import uk.ac.ucl.protecs.objects.hosts.Person.SEX;
 import uk.ac.ucl.protecs.sim.ImportExport;
 import uk.ac.ucl.protecs.sim.Params;
@@ -106,6 +108,66 @@ public class DemographyLogging {
 	// ====================================== TODO: create logger that tracks how many weeks early a ptb is
 	
 	// ====================================== TODO: create logger that tracks duration between births
+	
+	public class BirthIntervalReporter implements Steppable {
+
+		WorldBankCovid19Sim world;
+		boolean firstTimeReporting;
+		
+		public BirthIntervalReporter(WorldBankCovid19Sim myWorld) {
+			this.world = myWorld;
+			this.firstTimeReporting = true;
+		}
+		
+		@Override
+		public void step(SimState arg0) {
+			// get current time to calculate birth interval
+
+			// get those alive at location with that occupation
+			Map<Boolean,  Map<Boolean, Map<Boolean, List<Person>>>> alive_gave_birth = world.agents.stream().collect(
+					Collectors.groupingBy(
+							Person::gaveBirthLastYear,
+									Collectors.groupingBy(
+											Person::isAlive,
+											Collectors.groupingBy(
+													Person::getBirthLogged
+													)
+											)
+									)
+					);
+			// set as a negative number for easy filtering in logging
+			double mean_birth_interval = Double.NaN;
+			try {
+				List<Person> eligiblePersons = alive_gave_birth.get(true).get(true).get(false);
+				int total_interval_between_births = 0;
+				int number_of_observations = 0;
+				for (Person p: eligiblePersons) {
+					if (p.getPastBirthDates().size() > 1) {
+						number_of_observations ++;
+						total_interval_between_births += p.getDateGaveBirth() - p.getPastBirthDates().get(p.getPastBirthDates().size() - 2);
+					}
+				}
+				mean_birth_interval = (double) total_interval_between_births / number_of_observations;
+				
+			}
+			catch (Exception e){
+				
+			}
+			int time = (int) (arg0.schedule.getTime() / world.params.ticks_per_day);
+
+			String birth_interval = "";
+			if (this.firstTimeReporting) {
+				birth_interval += "day" + t + "interval" + "\n" + String.valueOf(time) + t;
+			}
+			else {
+				birth_interval += String.valueOf(time) + t;
+			}
+			birth_interval += String.valueOf(mean_birth_interval) + "\n";
+			ImportExport.exportMe(world.birthIntervalFilename, birth_interval, world.timer);
+			this.firstTimeReporting = false;
+		}
+		
+	}
 
 	
 	public class PretermBirthReporter implements Steppable {

@@ -285,7 +285,7 @@ public class Demography {
 						int dayToCausePregnancy = myWorld.random.nextInt(30);
 						// determine in this pregnancy will be twins (assume only twins)
 						multiplePregnancy = (myWorld.random.nextDouble() < prob_multiple_pregnancy);
-						// check if prior pregnancy has occurred and if it is too short of a duration // TODO: make birth interval more sensible
+						// check if prior pregnancy has occurred and if it is too short of a duration
 						shortBirthInterval = (currentDay + dayToCausePregnancy - target.getDateGaveBirth() < 24 * 30);
 
 						// create a corresponding start of pregnancy
@@ -333,6 +333,8 @@ public class Demography {
 					case BIRTH:{
 						// create a birth
 						createBirth(myWorld, target.isAlive(), this.ptb);
+						// store this as a previous birth date
+						target.addBirthDate(currentDay);
 						// if they have twins, track it here
 						if (this.multiplePregnancy) {
 							createBirth(myWorld, target.isAlive(), this.ptb);
@@ -455,7 +457,7 @@ public class Demography {
 		if (BirthChecker.target.hasDietary_iron_deficiency()) logit += Math.log(ptb_AOR_anemia);
 		if (BirthChecker.target.getBmistatus().equals(BMIStatus.UNDERWEIGHT)) logit += Math.log(ptb_AOR_underweight); // TODO create bmi status prevalence
 		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.HIV.key)) logit += Math.log(ptb_AOR_hiv);
-		if (BirthChecker.target.getDiseaseSet().containsKey("MALARIA")) logit += Math.log(ptb_AOR_malaria); // TODO create malaria
+		if (BirthChecker.target.getDiseaseSet().containsKey("MALARIA")) logit += Math.log(ptb_AOR_malaria);
 		if (BirthChecker.multiplePregnancy) logit += Math.log(ptb_AOR_multiple_pregnancy);
 		// convert logit to probability
 		double prob_ptb = 1.0 / (1.0 + Math.exp(-logit));

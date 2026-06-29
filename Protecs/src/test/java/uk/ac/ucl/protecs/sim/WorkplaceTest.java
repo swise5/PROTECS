@@ -44,7 +44,7 @@ public class WorkplaceTest extends TestWatcherSetup{
 
 	@Override
 	protected String getOutputFileName() {
-		return "workplace-test-seeds.loc";
+		return "workplace-test-seeds.log";
 	}
 	
 	private String params;

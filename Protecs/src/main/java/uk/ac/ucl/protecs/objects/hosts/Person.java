@@ -7,6 +7,7 @@ import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.HOST;
 import sim.engine.SimState;
 import uk.ac.ucl.swise.behaviours.BehaviourNode;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -82,6 +83,8 @@ public class Person extends Host {
 	boolean bornPreTerm = false;
 	boolean priorPreTerm = false;
 	boolean preTermLogged = false;
+	ArrayList<Integer> pastBirthDates = new ArrayList<Integer>();
+
 
 
 	// Malnutrition
@@ -727,6 +730,14 @@ public class Person extends Host {
 
 	public void setPreTermLogged(boolean preTermLogged) {
 		this.preTermLogged = preTermLogged;
+	}
+
+	public ArrayList<Integer> getPastBirthDates() {
+		return pastBirthDates;
+	}
+
+	public void addBirthDate(int date) {
+		this.pastBirthDates.add(date);
 	}
 	
 	public boolean hasDietary_iron_deficiency() {
