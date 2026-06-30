@@ -77,6 +77,7 @@ public class WorldBankCovid19Sim extends SimState {
 	public String birthRateOutputFilename = null;
 	public String pretermBirthPrevalenceFilename = null;
 	public String birthIntervalFilename = null;
+	public String birthEarlinessFilename = null;
 	public String adminZonePopSizeOutputFilename = null;
 	public String covidCasesPerAdminZoneFilename = null; 
 	public String infections_export_filename = null;

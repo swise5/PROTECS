@@ -18,6 +18,7 @@ public class LoggingSetup{
 			world.birthRateOutputFilename = world.outputFilename + "_Birth_Rate.txt";
 			world.pretermBirthPrevalenceFilename = world.outputFilename + "_Preterm_Birth_Prevalence.txt";
 			world.birthIntervalFilename = world.outputFilename + "_Birth_Interval.txt";
+			world.birthEarlinessFilename = world.outputFilename + "_Birth_Earliness.txt";
 
 		}
 		// Check if the covid disease framework has been set up
@@ -108,7 +109,9 @@ public class LoggingSetup{
 			// schedule the birth interval reporter (birthIntervalFilename)
 			DemographyLogging.BirthIntervalReporter birthIntervalLog = logger.new BirthIntervalReporter(world);
 			world.schedule.scheduleRepeating(birthIntervalLog, world.param_schedule_reporting, world.params.ticks_per_day);
-			
+			// schedule the birth earliness reporter (birthEarlinessFilename)
+			DemographyLogging.pretermBirthEarlinessReporter birthEarlinesslog = logger.new pretermBirthEarlinessReporter(world);
+			world.schedule.scheduleRepeating(birthEarlinesslog, world.param_schedule_reporting, world.params.ticks_per_day);
 //			world.schedule.scheduleOnce(world.params.ticks_per_year, world.param_schedule_reporting, birthRateLog);
 			// schedule the 'other deaths' reporter (otherIncDeathOutputFilename)
 			world.schedule.scheduleRepeating(DemographyLogging.ReportOtherIncidenceOfDeath(world), world.param_schedule_reporting, world.params.ticks_per_day);	

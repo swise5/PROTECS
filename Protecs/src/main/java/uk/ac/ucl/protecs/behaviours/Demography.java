@@ -192,6 +192,7 @@ public class Demography {
 		boolean multiplePregnancy = false;
 		boolean shortBirthInterval = false;
 		boolean initialSetUp = true;
+		double weeksEarly = 0;
 		WorldBankCovid19Sim world;
 		public Births( Person p, WorldBankCovid19Sim myWorld ) {
 			this.target = p;
@@ -332,12 +333,12 @@ public class Demography {
 				switch (nextStep) {
 					case BIRTH:{
 						// create a birth
-						createBirth(myWorld, target.isAlive(), this.ptb);
+						createBirth(myWorld, target.isAlive(), this.ptb, this.weeksEarly);
 						// store this as a previous birth date
 						target.addBirthDate(currentDay);
 						// if they have twins, track it here
 						if (this.multiplePregnancy) {
-							createBirth(myWorld, target.isAlive(), this.ptb);
+							createBirth(myWorld, target.isAlive(), this.ptb, this.weeksEarly);
 						}
 						postBirthRescheduling(myWorld, target.isAlive());
 						break;
@@ -382,7 +383,7 @@ public class Demography {
 			}
 		}
 		
-		private void createBirth(SimState arg0, boolean isAlive, boolean isPreTerm) {
+		private void createBirth(SimState arg0, boolean isAlive, boolean isPreTerm, double weeksEarly) {
 			if (isAlive) {
 				int time = (int) (arg0.schedule.getTime() / world.params.ticks_per_day);
 //				System.out.println(target.getID() + " giving birth on " + (time));
@@ -429,6 +430,7 @@ public class Demography {
 				if (this.ptb) {
 					baby.setBornPreTerm(true);
 					target.setPriorPreTerm(isPreTerm);
+					baby.setWeeksEarly(weeksEarly);
 				}
 			}
 		// reset if they are pregnant or not
@@ -465,6 +467,7 @@ public class Demography {
 		
 		if (BirthChecker.ptb) {
 			double weeks_early = determine_ptb_weeks_early(BirthChecker);
+			BirthChecker.weeksEarly = weeks_early;
 			birthdate -= weeks_early * 7;
 		}
 		// Finally, if this is the inital set up births and the birth is scheduled before the start of the sim, 

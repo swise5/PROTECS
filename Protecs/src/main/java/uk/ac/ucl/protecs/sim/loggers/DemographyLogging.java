@@ -105,10 +105,36 @@ public class DemographyLogging {
 		
 	}
 	
-	// ====================================== TODO: create logger that tracks how many weeks early a ptb is
-	
-	// ====================================== TODO: create logger that tracks duration between births
-	
+	public class pretermBirthEarlinessReporter implements Steppable{
+		
+		WorldBankCovid19Sim world;
+		boolean firstTimeReporting;
+		
+		public pretermBirthEarlinessReporter(WorldBankCovid19Sim myWorld) {
+			this.world = myWorld;
+			this.firstTimeReporting = true;
+		}
+		
+		@Override
+		public void step(SimState arg0) {
+			List<Person> eligiblePersons =
+			        world.agents.stream()
+			                .filter(Person::isBornPreTerm)
+			                .filter(p -> !p.isPreTermLogged())
+			                .toList();
+			String birth_earliness = "";
+			if (this.firstTimeReporting) {
+				birth_earliness += "baby" + t + "weeks_early" + "\n";
+			}
+			for (Person p: eligiblePersons) {
+				birth_earliness += "p_" + String.valueOf(p.getID()) + t + p.getWeeksEarly() + "\n";
+			}
+			ImportExport.exportMe(world.birthEarlinessFilename, birth_earliness, world.timer);
+			this.firstTimeReporting = false;
+		}
+		
+	}
+		
 	public class BirthIntervalReporter implements Steppable {
 
 		WorldBankCovid19Sim world;
@@ -122,37 +148,18 @@ public class DemographyLogging {
 		@Override
 		public void step(SimState arg0) {
 			// get current time to calculate birth interval
-
-			// get those alive at location with that occupation
-			Map<Boolean,  Map<Boolean, Map<Boolean, List<Person>>>> alive_gave_birth = world.agents.stream().collect(
-					Collectors.groupingBy(
-							Person::gaveBirthLastYear,
-									Collectors.groupingBy(
-											Person::isAlive,
-											Collectors.groupingBy(
-													Person::getBirthLogged
-													)
-											)
-									)
-					);
-			// set as a negative number for easy filtering in logging
-			double mean_birth_interval = Double.NaN;
-			try {
-				List<Person> eligiblePersons = alive_gave_birth.get(true).get(true).get(false);
-				int total_interval_between_births = 0;
-				int number_of_observations = 0;
-				for (Person p: eligiblePersons) {
-					if (p.getPastBirthDates().size() > 1) {
-						number_of_observations ++;
-						total_interval_between_births += p.getDateGaveBirth() - p.getPastBirthDates().get(p.getPastBirthDates().size() - 2);
-					}
-				}
-				mean_birth_interval = (double) total_interval_between_births / number_of_observations;
-				
-			}
-			catch (Exception e){
-				
-			}
+			double meanBirthInterval =
+			        world.agents.stream()
+			                .filter(Person::gaveBirthLastYear)
+			                .filter(Person::isAlive)
+			                .filter(p -> !p.getBirthLogged())
+			                .filter(p -> p.getPastBirthDates().size() > 1)
+			                .mapToInt(p ->
+			                        p.getDateGaveBirth()
+			                        - p.getPastBirthDates()
+			                           .get(p.getPastBirthDates().size() - 2))
+			                .average()
+			                .orElse(Double.NaN);
 			int time = (int) (arg0.schedule.getTime() / world.params.ticks_per_day);
 
 			String birth_interval = "";
@@ -162,7 +169,7 @@ public class DemographyLogging {
 			else {
 				birth_interval += String.valueOf(time) + t;
 			}
-			birth_interval += String.valueOf(mean_birth_interval) + "\n";
+			birth_interval += String.valueOf(meanBirthInterval) + "\n";
 			ImportExport.exportMe(world.birthIntervalFilename, birth_interval, world.timer);
 			this.firstTimeReporting = false;
 		}
