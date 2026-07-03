@@ -25,4 +25,4 @@ communityLocationFilename: community_loc_empty.txt
 loggingAgeBoundaryFilename: logging_age_boundaries.txt
 
 prevalence_line_list_filename: Dummy_Malaria_HIV_Anemia_Prevalence.csv
-
+population_BMI_filename: NCD_RisC_SSA_BMI_status.csv

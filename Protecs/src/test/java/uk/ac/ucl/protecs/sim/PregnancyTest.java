@@ -609,7 +609,7 @@ public class PregnancyTest extends TestWatcherSetup{
 		remove_ptb_risk_factors(sim);
 		// make the population underweight
 		for (Person p: sim.agents) {
-			p.setBmistatus(BMIStatus.UNDERWEIGHT);
+			p.setBMIStatus(BMIStatus.UNDERWEIGHT);
 		}
 		
 		int numDays = 365; 		
@@ -633,7 +633,7 @@ public class PregnancyTest extends TestWatcherSetup{
 		remove_ptb_risk_factors(sim_w_underweight);
 		// make the population underweight
 		for (Person p: sim_w_underweight.agents) {
-			p.setBmistatus(BMIStatus.UNDERWEIGHT);
+			p.setBMIStatus(BMIStatus.UNDERWEIGHT);
 		}
 				
 		// Set the risk factor for being underweight

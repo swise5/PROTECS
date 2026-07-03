@@ -457,7 +457,7 @@ public class Demography {
 		if (BirthChecker.shortBirthInterval) logit += Math.log(ptb_AOR_short_birth_interval);
 		if (BirthChecker.target.hasPriorPreTerm()) logit += Math.log(ptb_AOR_previous_ptb);
 		if (BirthChecker.target.hasDietary_iron_deficiency()) logit += Math.log(ptb_AOR_anemia);
-		if (BirthChecker.target.getBmistatus().equals(BMIStatus.UNDERWEIGHT)) logit += Math.log(ptb_AOR_underweight); // TODO create bmi status prevalence
+		if (BirthChecker.target.getBMIStatus().equals(BMIStatus.UNDERWEIGHT)) logit += Math.log(ptb_AOR_underweight); // TODO create bmi status prevalence
 		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.HIV.key)) logit += Math.log(ptb_AOR_hiv);
 		if (BirthChecker.target.getDiseaseSet().containsKey("MALARIA")) logit += Math.log(ptb_AOR_malaria);
 		if (BirthChecker.multiplePregnancy) logit += Math.log(ptb_AOR_multiple_pregnancy);

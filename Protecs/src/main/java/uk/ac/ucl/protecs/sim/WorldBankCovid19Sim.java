@@ -254,7 +254,10 @@ public class WorldBankCovid19Sim extends SimState {
 		if (this.params.prevalenceLineList != null) {
 			loadEndemicConditions.seed_endemic_conditions(this);
 		}
-		
+		// load in the BMI status of the population
+		if (this.params.population_BMI_filename != null) {
+			loadEndemicConditions.seed_BMI_status(this);
+		}
 		// ======================================================= cholera set up ====================================================================
 		// set up things needed to model water
 		

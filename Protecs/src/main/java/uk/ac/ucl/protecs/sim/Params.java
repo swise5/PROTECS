@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import uk.ac.ucl.protecs.objects.hosts.Person;
+import uk.ac.ucl.protecs.objects.hosts.Person.BMIStatus;
 import uk.ac.ucl.protecs.objects.hosts.Person.OCCUPATION;
 import uk.ac.ucl.protecs.objects.hosts.Person.SEX;
 import uk.ac.ucl.protecs.objects.locations.CommunityLocation;
@@ -76,6 +77,8 @@ public class Params {
 	
 	public HashMap <DISEASE, HashMap<String,  HashMap<String, Double>>> prevalenceLineList;
 
+	public HashMap <String, HashMap<String,  HashMap<BMIStatus, Double>>> prevalenceBMIStatus;
+
 	ArrayList <Double> lockdownChangeList = new ArrayList <Double>();
 	
 	// holders for testing data
@@ -120,6 +123,7 @@ public class Params {
 	public String lockdown_changeList_filename = null;
 	public String all_cause_mortality_filename = null;
 	public String birth_rate_filename = null;
+	public String population_BMI_filename = null;
 	
 	public String workplaceContactsFilename = null;
 	public String workplaceConstraintsFilename= null;
@@ -223,6 +227,10 @@ public class Params {
 		// load in logging age boundaries
 		if (!(loggingAgeBoundaryFilename == null)) {
 			load_age_boundaries(dataDir + loggingAgeBoundaryFilename);
+		}
+		
+		if (!(population_BMI_filename == null)) {
+			load_BMI_prevalence(dataDir + population_BMI_filename);
 		}
 		
 	}
@@ -982,7 +990,72 @@ public class Params {
 		}
 	};
 
-	
+	public void load_BMI_prevalence(String BMIfilename) {
+		try {
+			
+			if(verbose)
+				System.out.println("Reading in data from " + BMIfilename);
+			
+			// Open the tracts file
+			FileInputStream fstream = new FileInputStream(BMIfilename);
+
+			// Convert our input stream to a BufferedReader
+			BufferedReader lineListDataFile = new BufferedReader(new InputStreamReader(fstream));
+			String s;
+
+			// extract the header
+			s = lineListDataFile.readLine();
+			// GBD column names: population_group, measure, location, sex, age, cause, metric, year, val, upper, lower
+			// Structure of hashmap HashMap <DISEASE, HashMap<SEX,  HashMap<String, Double>>> prevalenceLineList;
+
+			// map the header into column names relative to location
+			String [] header = splitRawCSVString(s);
+			HashMap <String, Integer> columnNames = parseHeader(header);
+			int sexIndex = columnNames.get("Sex");
+			int ageIndex = columnNames.get("Age");
+			int underweightIndex = columnNames.get("Underweight");
+			int overweightIndex = columnNames.get("Overweight");
+			int healthyWeightIndex = columnNames.get("Healthy weight");
+			int obeseIndex = columnNames.get("Obese");
+			prevalenceBMIStatus = new HashMap <String, HashMap<String,  HashMap<BMIStatus, Double>>>();
+			// read in the raw data
+			while ((s = lineListDataFile.readLine()) != null) {
+				// split the string between commas
+				String [] bits = splitRawCSVString(s);
+				// get the sex category
+				String mySex = bits[sexIndex].toLowerCase();
+				// get the string age boundary
+				String myAgeRange = bits[ageIndex];
+				// get the prevalence of each BMI s†atus in each age group
+				double underweightPrevalence = Double.parseDouble(bits[underweightIndex]);
+				double overweightPrevalence = Double.parseDouble(bits[overweightIndex]);
+				double healthyWeightPrevalence = Double.parseDouble(bits[healthyWeightIndex]);
+				double obesePrevalence = Double.parseDouble(bits[obeseIndex]);
+
+				prevalenceBMIStatus
+			    .computeIfAbsent(myAgeRange, d -> new HashMap<>())
+			    .computeIfAbsent(mySex, sex -> new HashMap<>())
+			    .put(BMIStatus.UNDERWEIGHT, underweightPrevalence);
+				prevalenceBMIStatus
+			    .computeIfAbsent(myAgeRange, d -> new HashMap<>())
+			    .computeIfAbsent(mySex, sex -> new HashMap<>())
+			    .put(BMIStatus.OVERWEIGHT, overweightPrevalence);
+				prevalenceBMIStatus
+			    .computeIfAbsent(myAgeRange, d -> new HashMap<>())
+			    .computeIfAbsent(mySex, sex -> new HashMap<>())
+			    .put(BMIStatus.HEALTHYWEIGHT, healthyWeightPrevalence);
+				prevalenceBMIStatus
+			    .computeIfAbsent(myAgeRange, d -> new HashMap<>())
+			    .computeIfAbsent(mySex, sex -> new HashMap<>())
+			    .put(BMIStatus.OBESE, obesePrevalence);
+				
+			}
+			
+		} catch (Exception e) {
+	        throw new IllegalArgumentException("File input error: " + BMIfilename);
+
+		}
+	}
 	/**
 	 * 
 	 * @param econFilename

@@ -702,11 +702,11 @@ public class Person extends Host {
 	public void setAgeForTesting(int age_to_set) {
 		this.age = age_to_set;
 	}
-	public BMIStatus getBmistatus() {
+	public BMIStatus getBMIStatus() {
 		return bmistatus;
 	}
 
-	public void setBmistatus(BMIStatus bmistatus) {
+	public void setBMIStatus(BMIStatus bmistatus) {
 		this.bmistatus = bmistatus;
 	}
 	
