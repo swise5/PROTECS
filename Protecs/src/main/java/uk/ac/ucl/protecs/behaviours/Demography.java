@@ -53,12 +53,25 @@ public class Demography {
 	public double ptb_prob_born_28_32_weeks = 0.104;// https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(23)00878-4/fulltext?uuid=uuid%3A1db73a17-556f-469a-b546-6bcb66dee6f5#supplementary-material
 	public double ptb_prob_born_32_39_weeks = 0.854;// https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(23)00878-4/fulltext?uuid=uuid%3A1db73a17-556f-469a-b546-6bcb66dee6f5#supplementary-material
 	
+	// we want to split the categories of PTB to match the more standard definitions with moderate PTB 32–33 weeks and late PTB: 34–36 weeks, assume uniform distribution
+	
+	double ptb_prob_born_32_33_weeks = ptb_prob_born_32_39_weeks * (2.0 / 5.0);
+	double ptb_prob_born_34_36_weeks = ptb_prob_born_32_39_weeks * (3.0 / 5.0);
+	
 	List<Double> ptbDistributionOfWeeksBornEarly = Arrays.asList(
 		    ptb_prob_born_before_28_weeks,
 		    ptb_prob_born_before_28_weeks + ptb_prob_born_28_32_weeks,
-		    ptb_prob_born_before_28_weeks + ptb_prob_born_28_32_weeks + ptb_prob_born_32_39_weeks
+		    ptb_prob_born_before_28_weeks + ptb_prob_born_28_32_weeks + ptb_prob_born_32_33_weeks,
+		    ptb_prob_born_before_28_weeks + ptb_prob_born_28_32_weeks + ptb_prob_born_32_33_weeks + ptb_prob_born_34_36_weeks
 		);
 
+	// PTB neonatal mortality (death in first 28 days) rates w.r.t born weeks early
+	public double ptb_neonatal_mortality_prob_less_than_28_weeks = 0.2732; // https://pmc.ncbi.nlm.nih.gov/articles/PMC12678064/?utm_source=chatgpt.com#bjo17506-sec-0015
+	public double ptb_neonatal_mortality_prob_28_to_31_weeks = 0.0324; // https://pmc.ncbi.nlm.nih.gov/articles/PMC12678064/?utm_source=chatgpt.com#bjo17506-sec-0015
+	public double ptb_neonatal_mortality_prob_32_to_33_weeks = 0.0136; // https://pmc.ncbi.nlm.nih.gov/articles/PMC12678064/?utm_source=chatgpt.com#bjo17506-sec-0015
+	public double ptb_neonatal_mortality_prob_34_to_36_weeks = 0.043; // https://pmc.ncbi.nlm.nih.gov/articles/PMC12678064/?utm_source=chatgpt.com#bjo17506-sec-0015
+
+	
 	enum MortalitySteps {
 		DEATH,
 		NO_DEATH
@@ -192,7 +205,7 @@ public class Demography {
 		boolean multiplePregnancy = false;
 		boolean shortBirthInterval = false;
 		boolean initialSetUp = true;
-		double weeksEarly = 0;
+		double gestationalAge = 0;
 		WorldBankCovid19Sim world;
 		public Births( Person p, WorldBankCovid19Sim myWorld ) {
 			this.target = p;
@@ -272,8 +285,7 @@ public class Demography {
 						// Some of these will be twins
 						multiplePregnancy = (myWorld.random.nextDouble() < prob_multiple_pregnancy);
 
-						int dayToCauseBirth = determine_birth_date(this);
-						this.tickToCauseBirth = (currentDay + dayToCauseBirth) * world.params.ticks_per_day;
+						this.tickToCauseBirth = (determine_pregnancy_duration_in_days(this) + currentDay) * world.params.ticks_per_day;
 //						System.out.println("First nine months scheduled to give birth on " + (currentDay + dayToCauseBirth));
 						// schedule this to rerun on the birth date
 						myWorld.schedule.scheduleOnce(this.tickToCauseBirth, this);	
@@ -333,12 +345,12 @@ public class Demography {
 				switch (nextStep) {
 					case BIRTH:{
 						// create a birth
-						createBirth(myWorld, target.isAlive(), this.ptb, this.weeksEarly);
+						createBirth(myWorld, target.isAlive(), this.ptb, this.gestationalAge);
 						// store this as a previous birth date
 						target.addBirthDate(currentDay);
 						// if they have twins, track it here
 						if (this.multiplePregnancy) {
-							createBirth(myWorld, target.isAlive(), this.ptb, this.weeksEarly);
+							createBirth(myWorld, target.isAlive(), this.ptb, this.gestationalAge);
 						}
 						postBirthRescheduling(myWorld, target.isAlive());
 						break;
@@ -347,7 +359,7 @@ public class Demography {
 					case PREGNANCY:{
 						target.setPregnant(true);
 						// set a date for the birth
-						this.tickToCauseBirth =  determine_birth_date(this);;
+						this.tickToCauseBirth = (determine_pregnancy_duration_in_days(this) + currentDay) * world.params.ticks_per_day;
 						// schedule this to rerun on the birth date
 						myWorld.schedule.scheduleOnce(this.tickToCauseBirth, this);	
 						break;
@@ -430,7 +442,7 @@ public class Demography {
 				if (this.ptb) {
 					baby.setBornPreTerm(true);
 					target.setPriorPreTerm(isPreTerm);
-					baby.setWeeksEarly(weeksEarly);
+					baby.setGestationalAge(weeksEarly);
 				}
 			}
 		// reset if they are pregnant or not
@@ -442,17 +454,20 @@ public class Demography {
 		return all_cause_death_age_params;
 	}
 
-	public int determine_birth_date(Births BirthChecker) {
+	public int determine_pregnancy_duration_in_days(Births BirthChecker) {
 		int birthdate = 0;
 		if (BirthChecker.initialSetUp) {
+			// first step, those pregnant before the start of the simulation, some will be nine months pregnant up to nine months before the start of simulation
+			// draw a number randomly for births in the first nine months
 			birthdate = myWorld.random.nextInt(9 * 30);
 			}
 		else {
-			birthdate = 9 * 30 * BirthChecker.world.params.ticks_per_day + BirthChecker.ticksToUpdatePregnancy;
+			birthdate = 39 * 7; // full term
 			}
-		
+		// get the baseline odds for ptb
 		double baseline_odds = Math.log(ptb_base_rate / (1 - ptb_base_rate));
 		double logit = baseline_odds;
+		// adjust the odds of ptb with respect to risk factors
 		if (BirthChecker.target.getAge() < 20) logit += Math.log(ptb_AOR_age_less_than_20_years);
 		if (BirthChecker.shortBirthInterval) logit += Math.log(ptb_AOR_short_birth_interval);
 		if (BirthChecker.target.hasPriorPreTerm()) logit += Math.log(ptb_AOR_previous_ptb);
@@ -463,12 +478,17 @@ public class Demography {
 		if (BirthChecker.multiplePregnancy) logit += Math.log(ptb_AOR_multiple_pregnancy);
 		// convert logit to probability
 		double prob_ptb = 1.0 / (1.0 + Math.exp(-logit));
+		// check if this person will give birth pre term
 		BirthChecker.ptb = BirthChecker.world.random.nextDouble() < prob_ptb;
 		
 		if (BirthChecker.ptb) {
-			double weeks_early = determine_ptb_weeks_early(BirthChecker);
-			BirthChecker.weeksEarly = weeks_early;
-			birthdate -= weeks_early * 7;
+			double gestational_age = determine_gestational_age(BirthChecker);
+			// set this for further use
+			BirthChecker.gestationalAge = gestational_age;
+			// calculate the difference between full term and the number of weeks they will be bron
+			double difference = 39 - gestational_age;
+			// reduce their birthdate (set to full term by default) by the difference
+			birthdate -= difference * 7;
 		}
 		// Finally, if this is the inital set up births and the birth is scheduled before the start of the sim, 
 		// just set the birth date to 0
@@ -477,27 +497,44 @@ public class Demography {
 		return birthdate;
 	}
 
-	private double determine_ptb_weeks_early(Births BirthChecker) {
-		double rand = BirthChecker.world.random.nextDouble();
-		int checker = 0;
-		double weeks_to_return;
-		for (double i: ptbDistributionOfWeeksBornEarly) {
-			if (rand < i) {
-				break;
-			}
-			checker ++;
-		}
-		if (checker == 0) {
-			weeks_to_return = 39 - 27;
-		}
-		if (checker == 1) {
-			weeks_to_return = 39 - 30;
-		}
-		else {
-			weeks_to_return = 39 - 35.5;
-		}
-		return weeks_to_return;
+	
+	private double determine_gestational_age(Births BirthChecker) {
+		// generate random number for decision on how early
+	    double rand = BirthChecker.world.random.nextDouble();
+	    // set up variable
+	    int category = 0;
+	    // determine how early PTB will be
+	    for (double p : ptbDistributionOfWeeksBornEarly) {
+	        if (rand < p) {
+	            break;
+	        }
+	        category++;
+	    }
+
+	    double gestationalAge;
+	    // generate the number of weeks the baby will be born at using nextDouble times the weeks in the category to act as a 
+	    // uniforn distribution with aid of mapping doubles to integers
+	    switch (category) {
+	        case 0: // Extremely preterm: 22–27 weeks
+	            gestationalAge = 22 + BirthChecker.world.random.nextDouble() * 6;
+	            break;
+
+	        case 1: // Very preterm: 28–31 weeks
+	            gestationalAge = 28 + BirthChecker.world.random.nextDouble() * 4;
+	            break;
+
+	        case 2: // Moderate preterm: 32–33 weeks
+	            gestationalAge = 32 + BirthChecker.world.random.nextDouble() * 2;
+	            break;
+
+	        default: // Late preterm: 34–36 weeks
+	            gestationalAge = 34 + BirthChecker.world.random.nextDouble() * 3;
+	            break;
+	    }
+	    // return 
+	    return gestationalAge;
 	}
+	
 
 	public void setAll_cause_death_age_params(ArrayList<Integer> all_cause_death_age_params) {
 		this.all_cause_death_age_params = all_cause_death_age_params;

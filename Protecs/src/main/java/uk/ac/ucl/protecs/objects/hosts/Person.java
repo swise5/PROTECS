@@ -83,7 +83,7 @@ public class Person extends Host {
 	boolean bornPreTerm = false;
 	boolean priorPreTerm = false;
 	boolean preTermLogged = false;
-	double weeksEarly = Double.MIN_VALUE;
+	double gestationalAge = Double.MIN_VALUE;
 
 	ArrayList<Integer> pastBirthDates = new ArrayList<Integer>();
 
@@ -742,12 +742,12 @@ public class Person extends Host {
 		this.pastBirthDates.add(date);
 	}
 	
-	public double getWeeksEarly() {
-		return weeksEarly;
+	public double getGestationalAge() {
+		return gestationalAge;
 	}
 
-	public void setWeeksEarly(double weeksEarly) {
-		this.weeksEarly = weeksEarly;
+	public void setGestationalAge(double weeksEarly) {
+		this.gestationalAge = weeksEarly;
 	}
 	public boolean hasDietary_iron_deficiency() {
 		return dietary_iron_deficiency;

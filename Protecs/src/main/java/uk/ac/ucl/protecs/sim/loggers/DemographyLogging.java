@@ -124,10 +124,10 @@ public class DemographyLogging {
 			                .toList();
 			String birth_earliness = "";
 			if (this.firstTimeReporting) {
-				birth_earliness += "baby" + t + "weeks_early" + "\n";
+				birth_earliness += "baby" + t + "gestational_age_weeks" + "\n";
 			}
 			for (Person p: eligiblePersons) {
-				birth_earliness += "p_" + String.valueOf(p.getID()) + t + p.getWeeksEarly() + "\n";
+				birth_earliness += "p_" + String.valueOf(p.getID()) + t + p.getGestationalAge() + "\n";
 			}
 			ImportExport.exportMe(world.birthEarlinessFilename, birth_earliness, world.timer);
 			this.firstTimeReporting = false;
