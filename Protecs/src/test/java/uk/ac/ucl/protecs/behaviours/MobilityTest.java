@@ -145,9 +145,6 @@ public class MobilityTest extends TestWatcherSetup{
 		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, params);
 		sim.start();
 		HelperFunctions.makePeopleAlwaysLeaveHome(sim);
-		// when new people are born, they are sent to their home. Remove chances of birth to prevent this happening
-		HelperFunctions.turnOffBirthsOrDeaths(sim, birthsOrDeaths.births);
-		HelperFunctions.turnOffBirthsOrDeaths(sim, birthsOrDeaths.deaths);
 
 		// people start at home and then go to the community afterwards
 		List<String> finalNodesInRun = HelperFunctions.getFinalBehaviourNodesInSim(sim, 2.01 / sim.params.ticks_per_day, NodeOption.MovementBehaviour);
@@ -307,7 +304,7 @@ public class MobilityTest extends TestWatcherSetup{
 	@Parameterized.Parameters
 	public static List<String> params() {
 	    return Arrays.asList(
-	            new String[]{PARAMS_DIR + "params.txt", PARAMS_DIR + "params_ward_dummy.txt"}
+	            new String[]{PARAMS_DIR + "params_mobility.txt", PARAMS_DIR + "params_ward_dummy.txt"}
 	    
 	    );
 	}
