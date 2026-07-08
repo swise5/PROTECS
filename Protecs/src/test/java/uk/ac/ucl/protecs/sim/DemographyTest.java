@@ -13,6 +13,7 @@ import uk.ac.ucl.protecs.helperFunctions.*;
 import uk.ac.ucl.protecs.helperFunctions.HelperFunctions.birthsOrDeaths;
 import uk.ac.ucl.protecs.objects.hosts.Person;
 import uk.ac.ucl.protecs.objects.hosts.Person.SEX;
+import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.CAUSEOFDEATH;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -71,7 +72,7 @@ public class DemographyTest extends TestWatcherSetup{
 		HelperFunctions.turnOffBirthsOrDeaths(sim, birthsOrDeaths.deaths);
 		// Remove women in the simulation
 		for (Person p: sim.agents) {
-			if (p.getSex().equals(SEX.FEMALE)) {p.die("");}
+			if (p.getSex().equals(SEX.FEMALE)) {p.die(CAUSEOFDEATH.OTHER.key);}
 		}
 		// Run the simulation for 100 days
 		int numDays = 100;

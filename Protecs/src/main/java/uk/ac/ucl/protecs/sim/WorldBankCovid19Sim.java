@@ -47,6 +47,8 @@ public class WorldBankCovid19Sim extends SimState {
 	public HashSet <OCCUPATION> occupationsInSim = null;
 	public Random random;
 	
+	public HashMap<CAUSEOFDEATH, ArrayList<Person>> deathsInSim = null;
+	
 	public ArrayList <Location> adminBoundaries = null;
 	
 	public ArrayList <CommunityLocation> communityLocations = null;
@@ -161,7 +163,44 @@ public class WorldBankCovid19Sim extends SimState {
         	}
         }
 	}
-
+	
+	public enum CAUSEOFDEATH{
+		DUMMY_NCD("DUMMY_NCD"), DUMMY_INFECTIOUS("DUMMY_INFECTIOUS"), DUMMY_WATERBORNE("DUMMY_WATERBORNE"), COVID("COVID-19"), 
+		CHOLERA("CHOLERA"), HIV("HIV"), MALARIA("MALARIA"), NEONATALMORTALITY("NEONATALMORTALITY"), OTHER("OTHER");
+		
+		public String key;
+	     
+		CAUSEOFDEATH(String key) { this.key = key; }
+    
+        public static CAUSEOFDEATH getValue(String x) {
+        	switch (x) {
+        	case "DUMMY_NCD":
+        		return DUMMY_NCD;
+        	case "DUMMY_INFECTIOUS":
+        		return DUMMY_INFECTIOUS;
+        	case "DUMMY_WATERBORNE":
+        		return DUMMY_WATERBORNE;
+        	case "COVID-19":
+        		return COVID;
+        	case "CHOLERA":
+        		return CHOLERA;
+        	case "HIV":
+        		return HIV;
+        	case "HIV/AIDS":
+        		return HIV;
+        	case "Malaria":
+        		return MALARIA;
+        	case "NEONATALMORTALITY":
+        		return NEONATALMORTALITY;
+        	case "OTHER":
+        		return OTHER;
+        	default:
+        		throw new IllegalArgumentException();
+        	}
+        }
+	
+	}
+	
 	public enum HOST{
 		PERSON("PERSON"), WATER("WATER");
 		
@@ -228,7 +267,8 @@ public class WorldBankCovid19Sim extends SimState {
 		personsToAdminBoundary = new HashMap <Location, ArrayList<Person>>();
 		// initialise occupations in sim
 		occupationsInSim = new HashSet <OCCUPATION>(); 
-		
+		// initialise the deaths in simulation
+		deathsInSim = new HashMap<CAUSEOFDEATH, ArrayList<Person>>();
 		// load the population
 		LoadPopulation.load_population(params.dataDir + params.population_filename, this);
 		

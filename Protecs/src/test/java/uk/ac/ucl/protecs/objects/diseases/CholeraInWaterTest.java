@@ -16,6 +16,7 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim;
+import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.CAUSEOFDEATH;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.DISEASE;
 import uk.ac.ucl.protecs.behaviours.diseaseProgression.CholeraDiseaseProgressionFramework.CholeraBehaviourNodeInWater;
 import uk.ac.ucl.protecs.helperFunctions.*;
@@ -231,7 +232,7 @@ public class CholeraInWaterTest extends TestWatcherSetup{
 		// Make everyone go to their community
 		for (Person p: sim.agents) {
 			if (p.getDiseaseSet().size() > 0) {
-				p.die("");
+				p.die(CAUSEOFDEATH.OTHER.key);
 			}
 		}
 		// get community locations and create an infection

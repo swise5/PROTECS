@@ -14,6 +14,7 @@ import org.junit.runner.Description;
 
 import uk.ac.ucl.protecs.objects.hosts.Person;
 import uk.ac.ucl.protecs.objects.hosts.Person.BMIStatus;
+import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.CAUSEOFDEATH;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -649,6 +650,26 @@ public class PregnancyTest extends TestWatcherSetup{
 		}
 		// test whether accounting for the risks of being underweight in pregnancy increases the number preterm births compared to when we don't
 		Assert.assertTrue(underweightAffectedRateBabiesBornPreTerm.size() > baseRateBabiesBornPreTerm.size());
+
+	}
+	
+	@Test
+	public void testPTBCausesNeonatalMortality() {
+		int seed = (int) this.seed;		
+
+		// set up the simulation
+		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_ptb.txt");
+		sim.start();
+		// increase the birth rate
+		HelperFunctions.setParameterListsToValue(sim, sim.demographyFramework.getProb_birth_by_age(), 0.5);
+
+		// set dummy values for ptbs
+		sim.demographyFramework.setPtb_base_rate(0.2);
+		int numDays = 365; 		
+ 		HelperFunctions.runSimulation(sim, numDays);
+
+		// test whether accounting for the risks of being underweight in pregnancy increases the number preterm births compared to when we don't
+		Assert.assertTrue(sim.deathsInSim.get(CAUSEOFDEATH.NEONATALMORTALITY).size() > 0);
 
 	}
 	

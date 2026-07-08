@@ -1,6 +1,7 @@
 package uk.ac.ucl.protecs.objects.hosts;
 
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim;
+import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.CAUSEOFDEATH;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.DISEASE;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.HOST;
 
@@ -285,11 +286,16 @@ public class Person extends Host {
 	 */	
 	
 	public void die(String cause){
+		myWorld.deathsInSim.computeIfAbsent(CAUSEOFDEATH.getValue(cause), k -> new ArrayList<>()).add(this);
 		if (cause == "COVID-19") {
 			isDead = true;
 			System.out.println(this.toString() + " has DIED from " + cause + " :( ");
 		}
-		if (cause == "Cholera") {
+		if (cause == "CHOLERA") {
+			isDead = true;
+			System.out.println(this.toString() + " has DIED from " + cause + " :( ");
+		}
+		if (cause == "NEONATALMORTALITY") {
 			isDead = true;
 			System.out.println(this.toString() + " has DIED from " + cause + " :( ");
 		}

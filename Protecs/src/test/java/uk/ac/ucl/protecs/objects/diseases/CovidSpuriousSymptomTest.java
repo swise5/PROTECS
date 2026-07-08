@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import uk.ac.ucl.protecs.behaviours.diseaseProgression.CoronavirusDiseaseProgressionFramework.CoronavirusBehaviourNodeTitle;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim;
+import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.CAUSEOFDEATH;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.DISEASE;
 
 import java.io.FileWriter;
@@ -105,7 +106,7 @@ public class CovidSpuriousSymptomTest extends TestWatcherSetup{
 		// remove and existing infections from the population and assign half the population spurious symptoms
 		for (Person p: sim.agents) {
 			if (p.getDiseaseSet().containsKey(DISEASE.COVID.key)) {
-				p.die("");
+				p.die(CAUSEOFDEATH.OTHER.key);
 				}
 		}
 		giveAFractionASpuriousSymptom(0.5, sim);
@@ -125,7 +126,7 @@ public class CovidSpuriousSymptomTest extends TestWatcherSetup{
 		// Remove the development of new symptoms
 		HelperFunctions.StopCovidFromSpreading(sim);
 		// remove all people with covid
-		for (Person p: sim.agents) { if (p.getDiseaseSet().containsKey(DISEASE.COVID.key)) {p.die("");}}
+		for (Person p: sim.agents) { if (p.getDiseaseSet().containsKey(DISEASE.COVID.key)) {p.die(CAUSEOFDEATH.OTHER.key);}}
 		// create spurious symptoms
 		giveAFractionASpuriousSymptom(1, sim);
 		HelperFunctions.runSimulation(sim, numDays);

@@ -13,6 +13,7 @@ import uk.ac.ucl.protecs.objects.locations.Location;
 import uk.ac.ucl.protecs.objects.locations.Location.LocationCategory;
 import uk.ac.ucl.protecs.sim.Params;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim;
+import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.CAUSEOFDEATH;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.DISEASE;
 import uk.ac.ucl.protecs.objects.diseases.Disease.DISEASESTAGE;
 import uk.ac.ucl.swise.behaviours.BehaviourNode;
@@ -629,7 +630,7 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 			public double next(Steppable s, double time) {
 				CoronavirusInfection i = (CoronavirusInfection) s;
 				// remove covid from person object
-				((Person) i.getHost()).die("COVID-19");
+				((Person) i.getHost()).die(CAUSEOFDEATH.COVID.key);
 				// Update the disease property
 				i.setDiseaseStage(DISEASESTAGE.CAUSEOFDEATH);
 

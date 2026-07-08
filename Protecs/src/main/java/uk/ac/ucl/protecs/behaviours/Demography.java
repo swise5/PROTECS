@@ -18,6 +18,7 @@ import uk.ac.ucl.protecs.objects.hosts.Person.SEX;
 import uk.ac.ucl.protecs.objects.locations.Household;
 import uk.ac.ucl.protecs.objects.locations.Workplace;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim;
+import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.CAUSEOFDEATH;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.DISEASE;
 
 public class Demography {
@@ -138,7 +139,7 @@ public class Demography {
 		// functions used
 		private void causeDeath() {
 			if (target.isAlive()) {
-				target.die("<default>");
+				target.die(CAUSEOFDEATH.OTHER.key);
 				}
 		}
 
@@ -192,6 +193,69 @@ public class Demography {
 			
 		}
 		
+	}
+	
+	public class NeonatalMortalityCheck implements Steppable{
+
+		Person target;
+		int tickToCauseMortality = Integer.MAX_VALUE;
+		WorldBankCovid19Sim world;
+		public NeonatalMortalityCheck(Person p, WorldBankCovid19Sim myWorld) {
+			this.target = p;
+			this.world = myWorld;
+		} 
+		
+		@Override
+		public void step(SimState arg0) {
+			// This step performs the determining/causing mortality. Each year, a person will have a chance to have a date of
+			// death selected. Initially everyone goes through the determineMortality function. Which creates the date of death/reschedules
+			// itself for the start of next year if no date is selected.
+			if(this.target.isAlive()) {
+			if (this.tickToCauseMortality < Integer.MAX_VALUE) {
+				if (target.isAlive()) {
+					target.die(CAUSEOFDEATH.NEONATALMORTALITY.key);
+					}			
+				}
+			else {
+				
+				determineNeonatalMortality(arg0);
+			}		
+			}			
+		}
+		private void determineNeonatalMortality(SimState arg0) {
+			
+			MortalitySteps nextStep = MortalitySteps.NO_DEATH;
+			double rand_for_mortality = arg0.random.nextDouble();
+
+			if ((target.getGestationalAge() < 28) && (arg0.random.nextDouble() < ptb_neonatal_mortality_prob_less_than_28_weeks)) {
+				nextStep = MortalitySteps.DEATH;
+			}
+			if ((28 <= target.getGestationalAge()) && (target.getGestationalAge() < 32) && (rand_for_mortality < ptb_neonatal_mortality_prob_28_to_31_weeks)) {
+				nextStep = MortalitySteps.DEATH;
+			}
+			if ((32 <= target.getGestationalAge()) && (target.getGestationalAge() < 34) && (rand_for_mortality < ptb_neonatal_mortality_prob_32_to_33_weeks)) {
+				nextStep = MortalitySteps.DEATH;
+			}
+			if ((34 <= target.getGestationalAge()) && (target.getGestationalAge() < 37) && (rand_for_mortality < ptb_neonatal_mortality_prob_34_to_36_weeks)) {
+				nextStep = MortalitySteps.DEATH;
+			}
+			// act on next step
+			switch (nextStep) {
+			// ------------------------------------------------------------------------------------------------------------
+			case DEATH:{
+				// choose a day to die in the first 27 days of the babies life, the neonatal phase, then schedule this death to take place
+				this.tickToCauseMortality = (int) arg0.schedule.getTime() + arg0.random.nextInt(27) * world.params.ticks_per_day;
+				arg0.schedule.scheduleOnce(arg0.schedule.getTime() + this.tickToCauseMortality, this);
+				break;
+			}
+			// ------------------------------------------------------------------------------------------------------------
+			case NO_DEATH:{
+				// Do nothing as child has survived neonatal period
+				break;
+			}
+			
+		}
+	}
 	}
 	
 	public class Births implements Steppable{
@@ -395,7 +459,7 @@ public class Demography {
 			}
 		}
 		
-		private void createBirth(SimState arg0, boolean isAlive, boolean isPreTerm, double weeksEarly) {
+		private void createBirth(SimState arg0, boolean isAlive, boolean isPreTerm, double gestationalAge) {
 			if (isAlive) {
 				int time = (int) (arg0.schedule.getTime() / world.params.ticks_per_day);
 //				System.out.println(target.getID() + " giving birth on " + (time));
@@ -442,7 +506,10 @@ public class Demography {
 				if (this.ptb) {
 					baby.setBornPreTerm(true);
 					target.setPriorPreTerm(isPreTerm);
-					baby.setGestationalAge(weeksEarly);
+					baby.setGestationalAge(gestationalAge);
+					// schedule a check to see if they will die in the neonatal period
+					NeonatalMortalityCheck neonatalcheck = new NeonatalMortalityCheck(baby, world);
+					world.schedule.scheduleOnce(neonatalcheck);
 				}
 			}
 		// reset if they are pregnant or not
@@ -474,7 +541,7 @@ public class Demography {
 		if (BirthChecker.target.hasDietary_iron_deficiency()) logit += Math.log(ptb_AOR_anemia);
 		if (BirthChecker.target.getBMIStatus().equals(BMIStatus.UNDERWEIGHT)) logit += Math.log(ptb_AOR_underweight); // TODO create bmi status prevalence
 		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.HIV.key)) logit += Math.log(ptb_AOR_hiv);
-		if (BirthChecker.target.getDiseaseSet().containsKey("MALARIA")) logit += Math.log(ptb_AOR_malaria);
+		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.MALARIA.key)) logit += Math.log(ptb_AOR_malaria);
 		if (BirthChecker.multiplePregnancy) logit += Math.log(ptb_AOR_multiple_pregnancy);
 		// convert logit to probability
 		double prob_ptb = 1.0 / (1.0 + Math.exp(-logit));

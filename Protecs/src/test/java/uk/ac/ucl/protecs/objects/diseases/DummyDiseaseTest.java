@@ -23,6 +23,7 @@ import uk.ac.ucl.protecs.helperFunctions.HelperFunctions.birthsOrDeaths;
 import uk.ac.ucl.protecs.objects.hosts.Person;
 import uk.ac.ucl.protecs.objects.hosts.Person.SEX;
 import uk.ac.ucl.protecs.objects.hosts.Water;
+import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.CAUSEOFDEATH;
 import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.DISEASE;
 
 
@@ -212,7 +213,7 @@ public class DummyDiseaseTest extends TestWatcherSetup{
 		}
 		for (Person p: sim.agents) {
 			if (p.getSex().equals(SEX.FEMALE)) {
-				p.die("");
+				p.die(CAUSEOFDEATH.OTHER.key);
 				initial_number_of_women --;
 				if (initial_number_of_women <= initial_number_of_men) break;
 			}
@@ -271,7 +272,7 @@ public class DummyDiseaseTest extends TestWatcherSetup{
 		
 		for (Person p: sim.agents) {
 			if (p.getAge() <= 50) {
-				p.die("");
+				p.die(CAUSEOFDEATH.OTHER.key);
 				initial_number_under_50 --;
 				if (initial_number_under_50 < initial_number_over_50) break;
 			}
