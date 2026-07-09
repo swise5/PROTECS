@@ -40,6 +40,8 @@ public class Demography {
 	public double ptb_AOR_malaria = 3.08;
 	public double ptb_AOR_multiple_pregnancy = 3.08;
 	public double ptb_AOR_underweight = 4.52;
+	// to find value for
+	public double ptb_AOR_COVID = 1;
 
 	public double prob_multiple_pregnancy = 0.0174; // https://www.cambridge.org/core/journals/twin-research-and-human-genetics/article/twin-births-in-42-subsaharan-african-countries-from-1986-to-2016-frequency-trends-and-factors-of-variation/39A88B150744A794DDBF816FFA7F5950
 
@@ -265,11 +267,15 @@ public class Demography {
 		int tickToCauseBirth = Integer.MAX_VALUE;
 		int ticksToUpdatePregnancy = Integer.MAX_VALUE;
 		int daysToRescheduleNextBirth = Integer.MAX_VALUE;
+		int dueDate = Integer.MAX_VALUE;
+		int dayConceived = Integer.MAX_VALUE;
 		boolean ptb = false;
 		boolean multiplePregnancy = false;
 		boolean shortBirthInterval = false;
 		boolean initialSetUp = true;
 		double gestationalAge = 0;
+		double logit = 0;
+		double randForDecidingPTB = 0;
 		WorldBankCovid19Sim world;
 		public Births( Person p, WorldBankCovid19Sim myWorld ) {
 			this.target = p;
@@ -359,14 +365,14 @@ public class Demography {
 					// ------------------------------------------------------------------------------------------------------------
 					case SCHEDULE_PREGNANCY:{
 						// schedule day for the pregnancy
-						int dayToCausePregnancy = myWorld.random.nextInt(30);
+						this.dayConceived = myWorld.random.nextInt(30);
 						// determine in this pregnancy will be twins (assume only twins)
 						multiplePregnancy = (myWorld.random.nextDouble() < prob_multiple_pregnancy);
 						// check if prior pregnancy has occurred and if it is too short of a duration
-						shortBirthInterval = (currentDay + dayToCausePregnancy - target.getDateGaveBirth() < 24 * 30);
+						shortBirthInterval = (currentDay + this.dayConceived - target.getDateGaveBirth() < 24 * 30);
 
 						// create a corresponding start of pregnancy
-						this.ticksToUpdatePregnancy = (currentDay + dayToCausePregnancy) * world.params.ticks_per_day;
+						this.ticksToUpdatePregnancy = (currentDay + this.dayConceived) * world.params.ticks_per_day;
 //						System.out.println("Starting pregnancy on " + (currentDay + dayToCausePregnancy));
 
 						// schedule this event again on the day to cause pregnancy
@@ -423,7 +429,8 @@ public class Demography {
 					case PREGNANCY:{
 						target.setPregnant(true);
 						// set a date for the birth
-						this.tickToCauseBirth = (determine_pregnancy_duration_in_days(this) + currentDay) * world.params.ticks_per_day;
+						this.dueDate = this.dayConceived + determine_pregnancy_duration_in_days(this);
+						this.tickToCauseBirth = this.dueDate * world.params.ticks_per_day;
 						// schedule this to rerun on the birth date
 						myWorld.schedule.scheduleOnce(this.tickToCauseBirth, this);	
 						break;
@@ -432,15 +439,15 @@ public class Demography {
 					// ------------------------------------------------------------------------------------------------------------
 					case SCHEDULE_PREGNANCY:{
 						// schedule day for the pregnancy
-						int dayToCausePregnancy = myWorld.random.nextInt(30);
+						this.dayConceived = currentDay + myWorld.random.nextInt(30);
 						multiplePregnancy = (myWorld.random.nextDouble() < prob_multiple_pregnancy);
-						shortBirthInterval = (currentDay + dayToCausePregnancy - target.getDateGaveBirth() < 24 * 30);
-
-						this.ticksToUpdatePregnancy = (currentDay + dayToCausePregnancy) * world.params.ticks_per_day;
+						shortBirthInterval = (this.dayConceived - target.getDateGaveBirth() < 24 * 30);
+						// update the tick to update pregnancy. Offset this by one extra tick incase the person is pregnant today
+						this.ticksToUpdatePregnancy = this.dayConceived * world.params.ticks_per_day + 1;
 //						System.out.println("Starting pregnancy on " + (currentDay + dayToCausePregnancy));
 
 						// schedule this event again on the day to cause pregnancy
-						myWorld.schedule.scheduleOnce(currentTime + this.ticksToUpdatePregnancy, this);
+						myWorld.schedule.scheduleOnce(this.ticksToUpdatePregnancy, this);
 						break;
 								
 					}
@@ -533,20 +540,22 @@ public class Demography {
 			}
 		// get the baseline odds for ptb
 		double baseline_odds = Math.log(ptb_base_rate / (1 - ptb_base_rate));
-		double logit = baseline_odds;
+		BirthChecker.logit = baseline_odds;
 		// adjust the odds of ptb with respect to risk factors
-		if (BirthChecker.target.getAge() < 20) logit += Math.log(ptb_AOR_age_less_than_20_years);
-		if (BirthChecker.shortBirthInterval) logit += Math.log(ptb_AOR_short_birth_interval);
-		if (BirthChecker.target.hasPriorPreTerm()) logit += Math.log(ptb_AOR_previous_ptb);
-		if (BirthChecker.target.hasDietary_iron_deficiency()) logit += Math.log(ptb_AOR_anemia);
-		if (BirthChecker.target.getBMIStatus().equals(BMIStatus.UNDERWEIGHT)) logit += Math.log(ptb_AOR_underweight); // TODO create bmi status prevalence
-		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.HIV.key)) logit += Math.log(ptb_AOR_hiv);
-		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.MALARIA.key)) logit += Math.log(ptb_AOR_malaria);
-		if (BirthChecker.multiplePregnancy) logit += Math.log(ptb_AOR_multiple_pregnancy);
+		if (BirthChecker.target.getAge() < 20) BirthChecker.logit += Math.log(ptb_AOR_age_less_than_20_years);
+		if (BirthChecker.shortBirthInterval) BirthChecker.logit += Math.log(ptb_AOR_short_birth_interval);
+		if (BirthChecker.target.hasPriorPreTerm()) BirthChecker.logit += Math.log(ptb_AOR_previous_ptb);
+		if (BirthChecker.target.hasDietary_iron_deficiency()) BirthChecker.logit += Math.log(ptb_AOR_anemia);
+		if (BirthChecker.target.getBMIStatus().equals(BMIStatus.UNDERWEIGHT)) BirthChecker.logit += Math.log(ptb_AOR_underweight);
+		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.HIV.key)) BirthChecker.logit += Math.log(ptb_AOR_hiv);
+		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.MALARIA.key)) BirthChecker.logit += Math.log(ptb_AOR_malaria);
+		if (BirthChecker.multiplePregnancy) BirthChecker.logit += Math.log(ptb_AOR_multiple_pregnancy);
 		// convert logit to probability
-		double prob_ptb = 1.0 / (1.0 + Math.exp(-logit));
+		BirthChecker.randForDecidingPTB = BirthChecker.world.random.nextDouble();
+		
+		double probPTB = 1.0 / (1.0 + Math.exp(-BirthChecker.logit));
 		// check if this person will give birth pre term
-		BirthChecker.ptb = BirthChecker.world.random.nextDouble() < prob_ptb;
+		BirthChecker.ptb = BirthChecker.randForDecidingPTB < probPTB;
 		
 		if (BirthChecker.ptb) {
 			double gestational_age = determine_gestational_age(BirthChecker);
@@ -562,6 +571,17 @@ public class Demography {
 		if (birthdate < 0) birthdate = 0;
 		
 		return birthdate;
+	}
+	
+	public void updatePTBProbability(String Risk, Births BirthChecker) {
+		switch (Risk) {
+		
+		case ("COVID-19"):{
+				BirthChecker.logit += Math.log(ptb_AOR_COVID);
+			
+			}
+		}
+		
 	}
 
 	
