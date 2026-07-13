@@ -23,7 +23,8 @@ import uk.ac.ucl.protecs.sim.WorldBankCovid19Sim.DISEASE;
 import uk.ac.ucl.protecs.helperFunctions.*;
 import uk.ac.ucl.protecs.helperFunctions.HelperFunctions.NodeOption;
 import uk.ac.ucl.protecs.objects.diseases.Disease.DISEASESTAGE;
-
+import uk.ac.ucl.protecs.objects.hosts.Person;
+import uk.ac.ucl.protecs.objects.hosts.Person.SEX;
 
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -522,6 +523,62 @@ public class CoronavirusInfectiousBehaviourTest extends TestWatcherSetup{
 		// Make sure than no other nodes are reaching in the simulation
 		Assert.assertTrue(final_number_of_infections > number_of_initial_infections);
 	}
+	@Test
+	public void pregnancyRiskFactorForCriticalCasesWorks() {
+		int seed = (int) this.seed;		
+
+		// create a simulation and start
+		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_InfectiousBehaviourTest.txt");
+		sim.start();
+		loadInfectiousBehaviour(sim);
+
+		// Make sure there are no new infections
+		HelperFunctions.StopCovidFromSpreading(sim);
+		// Make everyone have a critical infection
+		HelperFunctions.SetFractionObjectsWithCertainBehaviourNode(1.0, sim, sim.covidInfectiousFramework.setNodeForTesting(CoronavirusBehaviourNodeTitle.SEVERE), 
+				NodeOption.CoronavirusInfectiousBehaviour);		// Ensure that no one disease progression occurs beyond the critical stage
+		HelperFunctions.HaltDiseaseProgressionAtStage(sim, CoronavirusBehaviourNodeTitle.CRITICAL);
+		// turn off recovery 
+		HelperFunctions.StopRecoveryHappening(sim);
+		// Set up a duration to run the simulation
+		int numDays = 100;
+		HelperFunctions.runSimulation(sim, numDays);
+		int number_of_critical_cases = 0;
+		for (Disease d: sim.human_infections) {
+			if (d.getCurrentBehaviourNode().getTitle().equals(CoronavirusBehaviourNodeTitle.CRITICAL.name())){
+				number_of_critical_cases++;
+			}
+		}
+		// set up the same simulation but make every woman pregnant
+		WorldBankCovid19Sim sim_w_pregnancy = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_InfectiousBehaviourTest.txt");
+		sim_w_pregnancy.start();
+		loadInfectiousBehaviour(sim_w_pregnancy);
+		for (Person p: sim_w_pregnancy.agents) {
+			if (p.getSex().equals(SEX.FEMALE)) {
+				p.setPregnant(true);
+			}
+		}
+			
+		// Make sure there are no new infections
+		HelperFunctions.StopCovidFromSpreading(sim_w_pregnancy);
+		// Make everyone have a critical infection
+		HelperFunctions.SetFractionObjectsWithCertainBehaviourNode(1.0, sim_w_pregnancy, sim_w_pregnancy.covidInfectiousFramework.setNodeForTesting(CoronavirusBehaviourNodeTitle.SEVERE), 
+				NodeOption.CoronavirusInfectiousBehaviour);		// Ensure that no one disease progression occurs beyond the critical stage
+		HelperFunctions.HaltDiseaseProgressionAtStage(sim_w_pregnancy, CoronavirusBehaviourNodeTitle.CRITICAL);
+		// turn off recovery 
+		HelperFunctions.StopRecoveryHappening(sim_w_pregnancy);
+		HelperFunctions.runSimulation(sim_w_pregnancy, numDays);
+		int number_of_critical_cases_w_pregnancy = 0;
+		for (Disease d: sim_w_pregnancy.human_infections) {
+			if (d.getCurrentBehaviourNode().getTitle().equals(CoronavirusBehaviourNodeTitle.CRITICAL.name())){
+				number_of_critical_cases_w_pregnancy++;
+			}
+		}
+		// check that when we include pregnancy there are a higher number of critical cases and the risk factor works
+		Assert.assertTrue(number_of_critical_cases_w_pregnancy > number_of_critical_cases);
+
+	}
+	
     // ================================ Helper functions ==================================================
 	
 	private void loadInfectiousBehaviour(WorldBankCovid19Sim sim) {

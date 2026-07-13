@@ -50,6 +50,9 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 	public double covid_criticalToRecovery_mean = 18.1 * Params.ticks_per_day;
 	public double covid_criticalToRecovery_std = 6.3 * Params.ticks_per_day;
 	
+	// relative risk of critical covid (ICU admission level) from pregnancy Wang et al. 2022 https://www.sciencedirect.com/science/article/pii/S0735675722002170?ref=cra_js_challenge&fr=RR-1
+	public double covid_pregnancy_rr_critical = 2.23;
+	
 	// probability of staying at home if having covid taken from Makinde et al. 2021 https://genus.springeropen.com/articles/10.1186/s41118-021-00130-w
 	public double covid_prob_stay_at_home_mild = 0.707;
 	public enum CoronavirusBehaviourNodeTitle{
@@ -437,6 +440,11 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 					i.setDiseaseStage(DISEASESTAGE.SEVERE);
 					double myCriticalLikelihood = myWorld.params.getLikelihoodByAge(
 							covid_infection_p_cri_by_age, covid_infection_age_params, ((Person) i.getHost()).getAge());
+					
+					// If this person is pregnant, increase the likelihood of critical illness
+					if (((Person) i.getHost()).isPregnant()) {
+						myCriticalLikelihood *= covid_pregnancy_rr_critical;
+					}
 
 					if (!((myCriticalLikelihood >= 0.0) && (myCriticalLikelihood <= 1.0))) {
 					    throw new IllegalArgumentException(
