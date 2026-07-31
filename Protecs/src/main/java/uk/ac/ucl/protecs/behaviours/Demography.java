@@ -40,8 +40,7 @@ public class Demography {
 	public double ptb_AOR_malaria = 3.08;
 	public double ptb_AOR_multiple_pregnancy = 3.08;
 	public double ptb_AOR_underweight = 4.52;
-	// to find value for
-	public double ptb_AOR_COVID = 1;
+
 
 	public double prob_multiple_pregnancy = 0.0174; // https://www.cambridge.org/core/journals/twin-research-and-human-genetics/article/twin-births-in-42-subsaharan-african-countries-from-1986-to-2016-frequency-trends-and-factors-of-variation/39A88B150744A794DDBF816FFA7F5950
 
@@ -573,16 +572,6 @@ public class Demography {
 		return birthdate;
 	}
 	
-	public void updatePTBProbability(String Risk, Births BirthChecker) {
-		switch (Risk) {
-		
-		case ("COVID-19"):{
-				BirthChecker.logit += Math.log(ptb_AOR_COVID);
-			
-			}
-		}
-		
-	}
 
 	
 	private double determine_gestational_age(Births BirthChecker) {
