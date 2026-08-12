@@ -161,7 +161,7 @@ public class Params {
 	
 	public ArrayList<String> age_category_list;
 	
-	public static String age_sex_categories;
+	public static String age_sex_categories = "";
 	
 	public Params(String paramsFilename, boolean isVerbose){
 		this.verbose = isVerbose;
