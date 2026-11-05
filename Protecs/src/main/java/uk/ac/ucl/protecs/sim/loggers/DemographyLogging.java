@@ -137,43 +137,45 @@ public class DemographyLogging {
 		
 	public class BirthIntervalReporter implements Steppable {
 
-		WorldBankCovid19Sim world;
+	    WorldBankCovid19Sim world;
 		boolean firstTimeReporting;
-		
-		public BirthIntervalReporter(WorldBankCovid19Sim myWorld) {
-			this.world = myWorld;
-			this.firstTimeReporting = true;
-		}
-		
-		@Override
-		public void step(SimState arg0) {
-			// get current time to calculate birth interval
-			double meanBirthInterval =
-			        world.agents.stream()
-			                .filter(Person::gaveBirthLastYear)
-			                .filter(Person::isAlive)
-			                .filter(p -> !p.getBirthLogged())
-			                .filter(p -> p.getPastBirthDates().size() > 1)
-			                .mapToInt(p ->
-			                        p.getDateGaveBirth()
-			                        - p.getPastBirthDates()
-			                           .get(p.getPastBirthDates().size() - 2))
-			                .average()
-			                .orElse(Double.NaN);
-			int time = (int) (arg0.schedule.getTime() / world.params.ticks_per_day);
 
-			String birth_interval = "";
-			if (this.firstTimeReporting) {
-				birth_interval += "day" + t + "interval" + "\n" + String.valueOf(time) + t;
+	    public BirthIntervalReporter(WorldBankCovid19Sim myWorld) {
+	        this.world = myWorld;
+			this.firstTimeReporting = true;
+	    }
+
+	    @Override
+	    public void step(SimState arg0) {
+
+	        String birth_interval = "";
+	        if (this.firstTimeReporting) {
+	        	birth_interval += "interval" + "\n";
 			}
-			else {
-				birth_interval += String.valueOf(time) + t;
-			}
-			birth_interval += String.valueOf(meanBirthInterval) + "\n";
-			ImportExport.exportMe(world.birthIntervalFilename, birth_interval, world.timer);
+
+	        for (Person p : world.agents) {
+
+	            if (p.gaveBirthLastYear()
+	                    && p.isAlive()
+	                    && !p.getBirthLogged()
+	                    && p.getPastBirthDates().size() > 1) {
+
+	                int interval = p.getDateGaveBirth()
+	                        - p.getPastBirthDates()
+	                            .get(p.getPastBirthDates().size() - 2);
+
+	                birth_interval += interval + "\n";
+	            }
+	        }
+
+	        ImportExport.exportMe(
+	                world.birthIntervalFilename,
+	                birth_interval,
+	                world.timer
+	        );
 			this.firstTimeReporting = false;
-		}
-		
+
+	    }
 	}
 
 	

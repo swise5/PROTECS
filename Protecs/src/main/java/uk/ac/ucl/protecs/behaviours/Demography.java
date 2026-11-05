@@ -31,7 +31,7 @@ public class Demography {
 	public ArrayList <Double> prob_birth_by_age;
 	
 	// PTB risk factor parameters, taken from https://link.springer.com/article/10.1186/s13052-020-0772-1 meta review in east Africa
-	public double ptb_base_rate = 0;
+	public double ptb_base_rate = 0.091; // calibrated to https://academic.oup.com/ije/article/51/6/1785/6454750?login=true
 	public double ptb_AOR_age_less_than_20_years = 1.76;
 	public double ptb_AOR_short_birth_interval = 2.03;
 	public double ptb_AOR_previous_ptb = 3.45;
@@ -44,7 +44,7 @@ public class Demography {
 
 	public double prob_multiple_pregnancy = 0.0174; // https://www.cambridge.org/core/journals/twin-research-and-human-genetics/article/twin-births-in-42-subsaharan-african-countries-from-1986-to-2016-frequency-trends-and-factors-of-variation/39A88B150744A794DDBF816FFA7F5950
 
-	public double median_birth_interval = 32; // median birth interval in SSA is 32 months https://link.springer.com/article/10.1186/s40834-026-00448-w
+	public double median_birth_interval = 43.14; // median birth interval in SSA is 32 months, this parameter was calibrated to hit that target https://link.springer.com/article/10.1186/s40834-026-00448-w
 
 
 	public double q1_birth_interval = 23; // q1 birth interval in SSA is 23 months https://link.springer.com/article/10.1186/s40834-026-00448-w
