@@ -11,6 +11,7 @@ import java.util.List;
 import sim.engine.SimState;
 import sim.engine.Steppable;
 import uk.ac.ucl.protecs.objects.diseases.Disease;
+import uk.ac.ucl.protecs.objects.diseases.Disease.DISEASESTAGE;
 import uk.ac.ucl.protecs.objects.hosts.Person;
 import uk.ac.ucl.protecs.objects.hosts.Person.BMIStatus;
 import uk.ac.ucl.protecs.objects.hosts.Person.OCCUPATION;
@@ -40,6 +41,11 @@ public class Demography {
 	public double ptb_AOR_malaria = 3.08;
 	public double ptb_AOR_multiple_pregnancy = 3.08;
 	public double ptb_AOR_underweight = 4.52;
+	
+	// covid based ptb risk factors taken from https://pmc.ncbi.nlm.nih.gov/articles/PMC9578260/
+	public double ptb_rr_mild_covid = 1.3;
+	public double ptb_rr_severe_vs_mild_moderate_covid = 2.4;
+
 
 
 	public double prob_multiple_pregnancy = 0.0174; // https://www.cambridge.org/core/journals/twin-research-and-human-genetics/article/twin-births-in-42-subsaharan-african-countries-from-1986-to-2016-frequency-trends-and-factors-of-variation/39A88B150744A794DDBF816FFA7F5950
@@ -265,7 +271,6 @@ public class Demography {
 		int ticksUntilNextBirthCheck = 0;
 		int tickToCauseBirth = Integer.MAX_VALUE;
 		int ticksToUpdatePregnancy = Integer.MAX_VALUE;
-		int daysToRescheduleNextBirth = Integer.MAX_VALUE;
 		int dueDate = Integer.MAX_VALUE;
 		int dayConceived = Integer.MAX_VALUE;
 		boolean ptb = false;
@@ -280,6 +285,7 @@ public class Demography {
 			this.target = p;
 			this.ticksUntilNextBirthCheck = myWorld.params.ticks_per_month;
 			this.world = myWorld;
+			this.randForDecidingPTB = world.random.nextDouble();
 		} 
 		@Override
 		public void step(SimState arg0) {
@@ -288,10 +294,17 @@ public class Demography {
 		}
 		
 		private void postBirthRescheduling(SimState arg0, boolean isAlive) {
-			if (isAlive) {
+			if (isAlive) {				
 				// reset tickToCauseBirth so this pathway can be used again
 				this.tickToCauseBirth = Integer.MAX_VALUE;
 				this.ticksToUpdatePregnancy = Integer.MAX_VALUE;
+				this.dueDate = Integer.MAX_VALUE;
+				this.dayConceived = Integer.MAX_VALUE;
+				this.multiplePregnancy = false;
+				this.shortBirthInterval = false;
+				this.gestationalAge = 0;
+				this.logit = 0;
+				this.randForDecidingPTB = 0;
 				// reset the preterm birth characteristic
 				this.ptb = false;
 				// reschedule the check to occur next year
@@ -353,8 +366,9 @@ public class Demography {
 						target.setPregnant(true);
 						// Some of these will be twins
 						multiplePregnancy = (myWorld.random.nextDouble() < prob_multiple_pregnancy);
+						this.dueDate = determine_pregnancy_duration_in_days(this);
 
-						this.tickToCauseBirth = (determine_pregnancy_duration_in_days(this) + currentDay) * world.params.ticks_per_day;
+						this.tickToCauseBirth = (this.dueDate + currentDay) * world.params.ticks_per_day;
 //						System.out.println("First nine months scheduled to give birth on " + (currentDay + dayToCauseBirth));
 						// schedule this to rerun on the birth date
 						myWorld.schedule.scheduleOnce(this.tickToCauseBirth, this);	
@@ -440,7 +454,10 @@ public class Demography {
 						// schedule day for the pregnancy
 						this.dayConceived = currentDay + myWorld.random.nextInt(30);
 						multiplePregnancy = (myWorld.random.nextDouble() < prob_multiple_pregnancy);
-						shortBirthInterval = (this.dayConceived - target.getDateGaveBirth() < 24 * 30);
+						if (target.getDateGaveBirth() > 0) {
+							// if this person has given birth before, see if it's a short birth interval
+							shortBirthInterval = (this.dayConceived - target.getDateGaveBirth() < 24 * 30);
+						}
 						// update the tick to update pregnancy. Offset this by one extra tick incase the person is pregnant today
 						this.ticksToUpdatePregnancy = this.dayConceived * world.params.ticks_per_day + 1;
 //						System.out.println("Starting pregnancy on " + (currentDay + dayToCausePregnancy));
@@ -517,9 +534,62 @@ public class Demography {
 					NeonatalMortalityCheck neonatalcheck = new NeonatalMortalityCheck(baby, world);
 					world.schedule.scheduleOnce(neonatalcheck);
 				}
+				baby.setMotherID(target.getID());
 			}
 		// reset if they are pregnant or not
 		target.setPregnant(false);
+		}
+		public void adjustPTBRiskWithCOVID(DISEASESTAGE diseaseStage, Births BirthChecker, double time) {
+			// first check if the birth is already set to be preterm, if so then do nothing
+			if (BirthChecker.ptb) return;
+			// adjust the risk if they have mild covid
+			if (diseaseStage.equals(DISEASESTAGE.MILD)) {
+				BirthChecker.logit += Math.log(ptb_rr_mild_covid * (1 - ptb_base_rate) / (1 - ptb_rr_mild_covid * ptb_base_rate));
+			}
+			// adjust the risk if they have severe covid
+
+			if (diseaseStage.equals(DISEASESTAGE.SEVERE)) {
+				BirthChecker.logit += Math.log(ptb_rr_severe_vs_mild_moderate_covid * (1 - ptb_base_rate) / (1 - ptb_rr_severe_vs_mild_moderate_covid * ptb_base_rate));
+			}
+			// check if this person will give birth pre term with all risk factors considered
+			double probPTB = 1.0 / (1.0 + Math.exp(-BirthChecker.logit));
+
+			BirthChecker.ptb = BirthChecker.randForDecidingPTB < probPTB;
+			if (BirthChecker.ptb) {
+				// get the scheduled pregnancy duration
+				double scheduled_pregnancy_duration = BirthChecker.dueDate - BirthChecker.dayConceived;
+				// get the current length of pregnancy
+				double current_pregnancy_duration = (time / BirthChecker.world.params.ticks_per_day) - BirthChecker.dayConceived;
+				// recalculate the gestational age
+				double new_gestational_age = determine_gestational_age(BirthChecker);
+				// set the new gestational age in weeks
+				BirthChecker.gestationalAge = new_gestational_age;
+				// calculate the difference between full term and the number of weeks they will be born
+				double difference = 39 - new_gestational_age;
+				// calculate the new birthdate
+				double new_birthdate = (39 - difference) * 7 + BirthChecker.dayConceived;
+				// stagger new birth date by at least one day as sometimes births can be scheduled for the current day
+				new_birthdate ++;
+				// if this due date is after the current time, adjust the due date
+				if (new_birthdate > (time / BirthChecker.world.params.ticks_per_day)) {
+					BirthChecker.dueDate = (int) new_birthdate;
+					// round up for safety
+					BirthChecker.tickToCauseBirth = (int) Math.ceil(new_birthdate * world.params.ticks_per_day);
+
+					BirthChecker.world.schedule.scheduleOnce(BirthChecker.tickToCauseBirth, this);
+					
+				}
+				// if it's not schedule the birth to happen asap
+				else {
+					BirthChecker.dueDate = (int) new_birthdate;
+					BirthChecker.tickToCauseBirth = BirthChecker.dueDate * world.params.ticks_per_day;
+					BirthChecker.world.schedule.scheduleOnce(time + 1, this);
+
+				}
+			}
+			else {
+				return;
+				}
 		}
 		
 	}
@@ -533,6 +603,7 @@ public class Demography {
 			// first step, those pregnant before the start of the simulation, some will be nine months pregnant up to nine months before the start of simulation
 			// draw a number randomly for births in the first nine months
 			birthdate = myWorld.random.nextInt(9 * 30);
+			BirthChecker.dayConceived = birthdate - 9 * 30;
 			}
 		else {
 			birthdate = 39 * 7; // full term
@@ -549,9 +620,16 @@ public class Demography {
 		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.HIV.key)) BirthChecker.logit += Math.log(ptb_AOR_hiv);
 		if (BirthChecker.target.getDiseaseSet().containsKey(DISEASE.MALARIA.key)) BirthChecker.logit += Math.log(ptb_AOR_malaria);
 		if (BirthChecker.multiplePregnancy) BirthChecker.logit += Math.log(ptb_AOR_multiple_pregnancy);
-		// convert logit to probability
-		BirthChecker.randForDecidingPTB = BirthChecker.world.random.nextDouble();
 		
+//		if (covidMild)
+//		    logit += Math.log(1.77);
+//		
+//
+//		if (covidSevere)
+//			logit += Math.log(1.77) + Math.log(4.29);
+//		
+//		RR * ( 1- ptb_base_rate) / (1 - RR * ptb_base_rate)
+		// convert logit to probability		
 		double probPTB = 1.0 / (1.0 + Math.exp(-BirthChecker.logit));
 		// check if this person will give birth pre term
 		BirthChecker.ptb = BirthChecker.randForDecidingPTB < probPTB;
@@ -571,7 +649,6 @@ public class Demography {
 		
 		return birthdate;
 	}
-	
 
 	
 	private double determine_gestational_age(Births BirthChecker) {
@@ -838,5 +915,27 @@ public class Demography {
 	public void setMedian_birth_interval(double median_birth_interval) {
 		this.median_birth_interval = median_birth_interval;
 	}
+	public double getPtb_rr_mild_covid() {
+		return ptb_rr_mild_covid;
+	}
+
+	public void setPtb_rr_mild_covid(double ptb_rr_mild_covid) {
+		this.ptb_rr_mild_covid = ptb_rr_mild_covid;
+	}
+
+	public double getPtb_rr_severe_vs_mild_moderate_covid() {
+		return ptb_rr_severe_vs_mild_moderate_covid;
+	}
+
+	public void setPtb_rr_severe_vs_mild_moderate_covid(double ptb_rr_severe_vs_mild_moderate_covid) {
+		this.ptb_rr_severe_vs_mild_moderate_covid = ptb_rr_severe_vs_mild_moderate_covid;
+	}
 	
+	public void turnOffNeonatalMortality() {
+		this.ptb_neonatal_mortality_prob_less_than_28_weeks = 0;
+		this.ptb_neonatal_mortality_prob_28_to_31_weeks = 0;
+		this.ptb_neonatal_mortality_prob_32_to_33_weeks = 0; 
+		this.ptb_neonatal_mortality_prob_34_to_36_weeks = 0;
+		
+	}
 }

@@ -106,6 +106,7 @@ public class WorldBankCovid19Sim extends SimState {
 	public static int param_schedule_lockdown = 0;
 	public static int param_schedule_movement = 1;
 	public static int param_schedule_updating_locations = 5;
+	public static int param_schedule_demography = 10;
 	public static int param_schedule_infecting = 10;
 	public static int param_schedule_calculate_statistics = 100;
 	public static int param_schedule_reporting = param_schedule_calculate_statistics + 1;
@@ -255,7 +256,7 @@ public class WorldBankCovid19Sim extends SimState {
 		
 		
 		// RESET SEED
-		random = new Random(this.seed());
+//		random = new Random(this.seed());
 
 		// initialise the agent storage
 		// holders for construction
@@ -436,7 +437,8 @@ public class WorldBankCovid19Sim extends SimState {
 				// if biologically female and below 50, trigger checks for giving birth each year
 				if ((((Person) a).getSex().equals(SEX.FEMALE)) && (((Person) a).getAge() < 50)) {
 					Demography.Births agentBirths = demographyFramework.new Births(a, this);
-					schedule.scheduleOnce(0, this.param_schedule_reporting, agentBirths);
+					schedule.scheduleOnce(0, this.param_schedule_demography, agentBirths);
+					a.setBirthTracker(agentBirths);
 				}
 			}
 		}

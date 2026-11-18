@@ -26,6 +26,8 @@ import uk.ac.ucl.protecs.objects.locations.Location;
 import uk.ac.ucl.protecs.objects.locations.Workplace;
 import uk.ac.ucl.protecs.objects.locations.Location.LocationCategory;
 
+import uk.ac.ucl.protecs.behaviours.Demography.Births;
+
 
 public class Person extends Host {
 	
@@ -77,14 +79,17 @@ public class Person extends Host {
 	private boolean isPregnant = false;
 	boolean gaveBirthLastYear = false;
 	boolean birthLogged = false;
-	Integer dayGaveBirth = Integer.MAX_VALUE;
+	Integer dayGaveBirth = Integer.MIN_VALUE;
 	Integer numberOfTimesWithCovid = 0;
 
 	// Birth status
+	Integer motherID = null;
 	boolean bornPreTerm = false;
 	boolean priorPreTerm = false;
 	boolean preTermLogged = false;
 	double gestationalAge = Double.MIN_VALUE;
+	Births birthTracker = null;
+
 
 	ArrayList<Integer> pastBirthDates = new ArrayList<Integer>();
 
@@ -755,6 +760,15 @@ public class Person extends Host {
 	public void setGestationalAge(double weeksEarly) {
 		this.gestationalAge = weeksEarly;
 	}
+	
+	public Births getBirthTracker() {
+		return birthTracker;
+	}
+
+	public void setBirthTracker(Births birthTracker) {
+		this.birthTracker = birthTracker;
+	}
+	
 	public boolean hasDietary_iron_deficiency() {
 		return dietary_iron_deficiency;
 	}
@@ -771,7 +785,13 @@ public class Person extends Host {
 		return toReturn;
 	}
 
-	
+	public int getMotherID() {
+		return motherID;
+	}
+
+	public void setMotherID(Integer motherID) {
+		this.motherID = motherID;
+	}
 	public void fetchWater(Water waterFrom, Water waterTo) {
 		// fetch the water, assume that this is only collection of water and not consuming it.
 		if (waterFrom.getDiseaseSet().size() > 0) {
@@ -835,4 +855,5 @@ public class Person extends Host {
 				}
 		
 	}
+
 }

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import sim.engine.Steppable;
+import uk.ac.ucl.protecs.behaviours.Demography.Births;
 import uk.ac.ucl.protecs.objects.diseases.CoronavirusInfection;
 import uk.ac.ucl.protecs.objects.hosts.Person;
 import uk.ac.ucl.protecs.objects.locations.Location;
@@ -98,7 +99,7 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 			@Override
 			public double next(Steppable s, double time) {
 				CoronavirusInfection i = (CoronavirusInfection) s;
-				if (((Person) i.getHost()).isDeadFromOther()) { 
+				if (!((Person) i.getHost()).isAlive()) { 
 					return Double.MAX_VALUE;
 				}
 				//
@@ -221,7 +222,7 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 				
 				// while presympotmatic, the agent is still infectious
 				CoronavirusInfection i = (CoronavirusInfection) s;
-				if (((Person) i.getHost()).isDeadFromOther()) {
+				if (!((Person) i.getHost()).isAlive()) {
 					return Double.MAX_VALUE;
 				}
 				((Person) i.getHost()).infectNeighbours();
@@ -266,7 +267,7 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 				
 				// although asympotmatic, the agent is still infectious
 				CoronavirusInfection i = (CoronavirusInfection) s;
-				if (((Person) i.getHost()).isDeadFromOther()) {
+				if (!((Person) i.getHost()).isAlive()) {
 					return Double.MAX_VALUE;
 				}
 				((Person) i.getHost()).infectNeighbours();
@@ -313,7 +314,7 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 				
 				// the agent is infectious
 				CoronavirusInfection i = (CoronavirusInfection) s;
-				if (((Person) i.getHost()).isDeadFromOther()) {
+				if (!((Person) i.getHost()).isAlive()) {
 					return Double.MAX_VALUE;
 				}
 				((Person) i.getHost()).infectNeighbours();
@@ -364,7 +365,22 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 					    throw new IllegalArgumentException(
 					    		"probability out of bounds " + mySevereLikelihood
 					    );
-					}					
+					}
+					
+					// ======== pregnancy and covid interaction check here, the first time this is run, increase risk of ptb with covid infection ======
+					if (((Person) i.getHost()).isPregnant()) {
+						try {
+							Births birthTracker = ((Person) i.getHost()).getBirthTracker();
+							birthTracker.adjustPTBRiskWithCOVID(i.getDiseaseStage(), ((Person) i.getHost()).getBirthTracker(), time);
+						}
+						catch (NullPointerException e){
+							
+						}
+					}
+					
+					
+					
+					// == covid infection next step calculation
 					if(myWorld.random.nextDouble() < mySevereLikelihood){
 						double time_until_severe = myWorld.nextRandomLognormal(
 								covid_symptomaticToSevere_mean, 
@@ -416,7 +432,7 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 				
 				// the agent is infectious
 				CoronavirusInfection i = (CoronavirusInfection) s;
-				if (((Person) i.getHost()).isDeadFromOther()) {
+				if (!((Person) i.getHost()).isAlive()) {
 					return Double.MAX_VALUE;
 				}
 				((Person) i.getHost()).infectNeighbours();
@@ -451,6 +467,19 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 					    		"probability out of bounds " + myCriticalLikelihood
 					    );
 					}	
+					
+					// ======== pregnancy and covid interaction check here, the first time this is run, increase risk of ptb with covid infection ======
+					if (((Person) i.getHost()).isPregnant()) {
+						// in testing, sometimes the pregnancy property is switched on without the full birth model being used, wrap this in a try/catch
+						try {
+							Births birthTracker = ((Person) i.getHost()).getBirthTracker();
+							birthTracker.adjustPTBRiskWithCOVID(i.getDiseaseStage(), ((Person) i.getHost()).getBirthTracker(), time);
+						}
+						catch (NullPointerException e){
+							
+						}
+					}
+					
 					
 					// determine if the patient will become sicker
 					if(myWorld.random.nextDouble() < myCriticalLikelihood){
@@ -505,7 +534,7 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 				
 				// the agent is infectious
 				CoronavirusInfection i = (CoronavirusInfection) s;
-				if (((Person) i.getHost()).isDeadFromOther()) {
+				if (!((Person) i.getHost()).isAlive()) {
 					return Double.MAX_VALUE;
 				}
 				((Person) i.getHost()).infectNeighbours();
@@ -590,7 +619,7 @@ public class CoronavirusDiseaseProgressionFramework extends DiseaseProgressionBe
 			public double next(Steppable s, double time) {
 
 				CoronavirusInfection i = (CoronavirusInfection) s;
-				if (((Person) i.getHost()).isDeadFromOther()) {
+				if (!((Person) i.getHost()).isAlive()) {
 					return Double.MAX_VALUE;
 				}
 				i.time_recovered = time;
