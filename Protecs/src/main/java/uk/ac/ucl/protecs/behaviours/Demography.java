@@ -32,7 +32,7 @@ public class Demography {
 	public ArrayList <Double> prob_birth_by_age;
 	
 	// PTB risk factor parameters, taken from https://link.springer.com/article/10.1186/s13052-020-0772-1 meta review in east Africa
-	public double ptb_base_rate = 0.091; // calibrated to https://academic.oup.com/ije/article/51/6/1785/6454750?login=true
+	public double ptb_base_rate = 0.095; // calibrated to https://academic.oup.com/ije/article/51/6/1785/6454750?login=true 0.091
 	public double ptb_AOR_age_less_than_20_years = 1.76;
 	public double ptb_AOR_short_birth_interval = 2.03;
 	public double ptb_AOR_previous_ptb = 3.45;
