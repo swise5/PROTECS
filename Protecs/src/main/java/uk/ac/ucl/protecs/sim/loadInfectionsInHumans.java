@@ -80,7 +80,7 @@ public class loadInfectionsInHumans{
 						if (world.covidInfectiousFramework.covid_infection_age_params == null) {
 							world.covidInfectiousFramework.load_infection_params(world.params.dataDir  + world.params.infection_transition_params_filename);
 						}
-						CoronavirusInfection inf = new CoronavirusInfection(p, null, world.covidInfectiousFramework.getInfectedEntryPoint(l), world, 0);						
+						CoronavirusInfection inf = new CoronavirusInfection(p, null, world.covidInfectiousFramework.getInfectedEntryPoint(l), world, infection_start_date);						
 						if (inf.getBehaviourName().equals("asymptomatic")) {
 							inf.setDiseaseStage(DISEASESTAGE.ASYMPTOMATIC);
 							inf.setInfectionActive(true);
@@ -96,7 +96,7 @@ public class loadInfectionsInHumans{
 						if (world.dummyNCDFramework == null) {
 							world.dummyNCDFramework = new DummyNonCommunicableDiseaseProgressionFramework(world);
 							}
-						DummyNonCommunicableDisease inf = new DummyNonCommunicableDisease(p, p, world.dummyNCDFramework.getStandardEntryPoint(), world, 0);			
+						DummyNonCommunicableDisease inf = new DummyNonCommunicableDisease(p, p, world.dummyNCDFramework.getStandardEntryPoint(), world, infection_start_date);			
 						world.schedule.scheduleOnce(ticks_to_start_date + 1, world.param_schedule_infecting, inf);
 						usingDummyNCD = true;
 						break;
@@ -105,7 +105,7 @@ public class loadInfectionsInHumans{
 						if (world.dummyInfectiousFramework == null) {
 							world.dummyInfectiousFramework = new DummyInfectiousDiseaseProgressionFramework(world);
 						}
-						DummyInfectiousDisease inf = new DummyInfectiousDisease(p, null, world.dummyInfectiousFramework.getStandardEntryPoint(), world, 0);			
+						DummyInfectiousDisease inf = new DummyInfectiousDisease(p, null, world.dummyInfectiousFramework.getStandardEntryPoint(), world, infection_start_date);			
 						world.schedule.scheduleOnce(ticks_to_start_date + 1, world.param_schedule_infecting, inf);
 						break;
 					}
@@ -113,7 +113,7 @@ public class loadInfectionsInHumans{
 						if (world.dummyWaterborneFramework == null) {
 							world.dummyWaterborneFramework = new DummyWaterborneDiseaseProgressionFramework(world);
 							}
-						DummyWaterborneDisease inf = new DummyWaterborneDisease(p, null, world.dummyWaterborneFramework.getStandardEntryPoint(), world, 0);			
+						DummyWaterborneDisease inf = new DummyWaterborneDisease(p, null, world.dummyWaterborneFramework.getStandardEntryPoint(), world, infection_start_date);			
 						world.schedule.scheduleOnce(ticks_to_start_date + 1, world.param_schedule_infecting, inf);
 						break;
 					}
@@ -121,7 +121,7 @@ public class loadInfectionsInHumans{
 						if (world.choleraFramework == null) {
 							world.choleraFramework = new CholeraDiseaseProgressionFramework(world);
 							}
-						Cholera inf = new Cholera(p, null, world.choleraFramework.getStandardEntryPoint(), world, 0);
+						Cholera inf = new Cholera(p, null, world.choleraFramework.getStandardEntryPoint(), world, infection_start_date);
 						world.schedule.scheduleOnce(ticks_to_start_date + 1, world.param_schedule_infecting, inf);
 						break;
 						}
@@ -129,7 +129,7 @@ public class loadInfectionsInHumans{
 						if (world.hivFramework == null) {
 							world.hivFramework = new HIVDiseaseProgressionFramework(world);
 							}
-						HIV inf = new HIV(p, null, world.hivFramework.getStandardEntryPoint(), world, 0);
+						HIV inf = new HIV(p, null, world.hivFramework.getStandardEntryPoint(), world, infection_start_date);
 						world.schedule.scheduleOnce(ticks_to_start_date + 1, world.param_schedule_infecting, inf);
 						break;
 					}

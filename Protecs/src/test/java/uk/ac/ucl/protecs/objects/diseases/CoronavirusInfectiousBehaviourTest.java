@@ -579,6 +579,53 @@ public class CoronavirusInfectiousBehaviourTest extends TestWatcherSetup{
 
 	}
 	
+	@Test
+	public void testDelayedStartWorks() {
+		int seed = (int) this.seed;		
+
+		// create a simulation and start
+		WorldBankCovid19Sim sim = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_test_infection_start_date.txt");
+		sim.start();
+		int infections_at_start = 0;
+		for (Disease d: sim.human_infections) {
+			if (d.getDiseaseType().equals(DISEASE.COVID)) {
+				infections_at_start++;
+			}
+		}
+		// Make beta large
+		sim.covidInfectiousFramework.setCovid_infectious_beta(10);
+		// Make sure that people exposed don't revert back to being susceptible
+		HelperFunctions.StopRecoveryHappening(sim);
+		int numDays = 10;
+		// Run the simulation for 10 days, we've set the infections to start their behaviours at 10 days
+		HelperFunctions.runSimulation(sim, numDays);
+
+		int infections_at_nine_days = 0;
+		for (Disease d: sim.human_infections) {
+			if (d.getDiseaseType().equals(DISEASE.COVID)) {
+				infections_at_nine_days++;
+			}
+		}
+		Assert.assertTrue(infections_at_start == infections_at_nine_days);
+		// Run for an additional day and we should see disease behaviour beginning 
+		WorldBankCovid19Sim sim_ran_until_covid_starts = HelperFunctions.CreateDummySimWithSeed(seed, PARAMS_DIR + "params_test_infection_start_date.txt");
+		sim_ran_until_covid_starts.start();
+		// Make beta large
+		sim_ran_until_covid_starts.covidInfectiousFramework.setCovid_infectious_beta(10);
+		// Make sure that people exposed don't revert back to being susceptible
+		HelperFunctions.StopRecoveryHappening(sim_ran_until_covid_starts);
+		HelperFunctions.runSimulation(sim_ran_until_covid_starts, numDays + 1);
+
+		int final_number_of_infections = 0;
+		for (Disease d: sim_ran_until_covid_starts.human_infections) {
+			if (d.getDiseaseType().equals(DISEASE.COVID)) {
+				final_number_of_infections++;
+			}
+		}
+		// Make sure than no other nodes are reaching in the simulation
+		Assert.assertTrue(final_number_of_infections > infections_at_nine_days);
+	}
+	
     // ================================ Helper functions ==================================================
 	
 	private void loadInfectiousBehaviour(WorldBankCovid19Sim sim) {

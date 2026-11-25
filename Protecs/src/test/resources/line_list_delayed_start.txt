@@ -1,1 +1,3 @@
-
+admin_zone, count, disease, host, start_date
+d_1, 5, COVID-19, PERSON, 10
+d_2, 5, COVID-19, PERSON, 10
