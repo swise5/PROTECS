@@ -74,6 +74,7 @@ public class Params {
 	
 	HashMap <DISEASE, HashMap<Location, Integer>> lineList;
 	HashMap <DISEASE, HashMap<Location, Integer>> lineListInOther;
+	HashMap <DISEASE, Integer> diseaseStartDate;
 	
 	public HashMap <DISEASE, HashMap<String,  HashMap<String, Double>>> prevalenceLineList;
 
@@ -305,14 +306,25 @@ public class Params {
 			int countIndex = columnNames.get("count");
 			int diseaseKeyIndex = columnNames.get("disease");
 			int hostKeyIndex = columnNames.get("host");
+			// let infection start date be defined in some cases and default to zero in others
+			int infStartDayIndex = 0;
+			try {
+				infStartDayIndex = columnNames.get("start_date");
+				}
+			catch (Exception e) {
+				
+			}
 			
 			// set up data container for each disease being seeded in, one container for people and one for other hosts
 			lineList = new HashMap <DISEASE, HashMap <Location, Integer>>();
 			lineListInOther = new HashMap <DISEASE, HashMap<Location, Integer>>();
+			diseaseStartDate = new HashMap<DISEASE, Integer>();
+			
 			// iterate over all diseases in the simulation to map disease to a hash map of places to be seeded with n cases
 			for (DISEASE d: DISEASE.values()) {
 				lineList.put(d, new HashMap <Location, Integer>());
 				lineListInOther.put(d, new HashMap <Location, Integer>());
+				diseaseStartDate.put(d,  0);
 			}
 			// read in the raw data
 			while ((s = lineListDataFile.readLine()) != null) {
@@ -324,6 +336,11 @@ public class Params {
 				Integer myCount = Integer.parseInt(bits[countIndex]);
 				// get the type of host to seed in
 				HOST myHost = HOST.getValue(bits[hostKeyIndex]);
+				// get the start of the infection if specified
+				if (infStartDayIndex > 0) {
+					Integer myStartDate = Integer.parseInt(bits[infStartDayIndex]);
+					diseaseStartDate.put(DISEASE.getValue(bits[diseaseKeyIndex]), myStartDate);
+				}
 				// do a switch based on the type of host, assuming most cases are intended to be seeded into people
 				switch (myHost) {
 				// cases to be seeded into water

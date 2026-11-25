@@ -49,6 +49,10 @@ public class loadInfectionsInHumans{
 					continue;
 				}
 		
+				// get the day to begin disease modelling interactions
+				int infection_start_date = world.params.diseaseStartDate.get(d);
+				int ticks_to_start_date = infection_start_date * world.params.ticks_per_day;
+				
 				// schedule people here
 				//for(Person p: peopleHere)
 				//	schedule.scheduleRepeating(0, p);
@@ -85,7 +89,7 @@ public class loadInfectionsInHumans{
 							inf.setDiseaseStage(DISEASESTAGE.MILD);
 							inf.setInfectionActive(true);
 						}
-						world.schedule.scheduleOnce(1, world.param_schedule_infecting, inf);
+						world.schedule.scheduleOnce(ticks_to_start_date + 1, world.param_schedule_infecting, inf);
 						break;
 					}
 					case DUMMY_NCD:{
@@ -93,7 +97,7 @@ public class loadInfectionsInHumans{
 							world.dummyNCDFramework = new DummyNonCommunicableDiseaseProgressionFramework(world);
 							}
 						DummyNonCommunicableDisease inf = new DummyNonCommunicableDisease(p, p, world.dummyNCDFramework.getStandardEntryPoint(), world, 0);			
-						world.schedule.scheduleOnce(1, world.param_schedule_infecting, inf);
+						world.schedule.scheduleOnce(ticks_to_start_date + 1, world.param_schedule_infecting, inf);
 						usingDummyNCD = true;
 						break;
 					}
@@ -102,7 +106,7 @@ public class loadInfectionsInHumans{
 							world.dummyInfectiousFramework = new DummyInfectiousDiseaseProgressionFramework(world);
 						}
 						DummyInfectiousDisease inf = new DummyInfectiousDisease(p, null, world.dummyInfectiousFramework.getStandardEntryPoint(), world, 0);			
-						world.schedule.scheduleOnce(1, world.param_schedule_infecting, inf);
+						world.schedule.scheduleOnce(ticks_to_start_date + 1, world.param_schedule_infecting, inf);
 						break;
 					}
 					case DUMMY_WATERBORNE:{
@@ -110,7 +114,7 @@ public class loadInfectionsInHumans{
 							world.dummyWaterborneFramework = new DummyWaterborneDiseaseProgressionFramework(world);
 							}
 						DummyWaterborneDisease inf = new DummyWaterborneDisease(p, null, world.dummyWaterborneFramework.getStandardEntryPoint(), world, 0);			
-						world.schedule.scheduleOnce(1, world.param_schedule_infecting, inf);
+						world.schedule.scheduleOnce(ticks_to_start_date + 1, world.param_schedule_infecting, inf);
 						break;
 					}
 					case CHOLERA:{
@@ -118,7 +122,7 @@ public class loadInfectionsInHumans{
 							world.choleraFramework = new CholeraDiseaseProgressionFramework(world);
 							}
 						Cholera inf = new Cholera(p, null, world.choleraFramework.getStandardEntryPoint(), world, 0);
-						world.schedule.scheduleOnce(1, world.param_schedule_infecting, inf);
+						world.schedule.scheduleOnce(ticks_to_start_date + 1, world.param_schedule_infecting, inf);
 						break;
 						}
 					case HIV:{
@@ -126,7 +130,7 @@ public class loadInfectionsInHumans{
 							world.hivFramework = new HIVDiseaseProgressionFramework(world);
 							}
 						HIV inf = new HIV(p, null, world.hivFramework.getStandardEntryPoint(), world, 0);
-						world.schedule.scheduleOnce(1, world.param_schedule_infecting, inf);
+						world.schedule.scheduleOnce(ticks_to_start_date + 1, world.param_schedule_infecting, inf);
 						break;
 					}
 						default:
