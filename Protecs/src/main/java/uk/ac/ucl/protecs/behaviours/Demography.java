@@ -50,7 +50,7 @@ public class Demography {
 
 	public double prob_multiple_pregnancy = 0.0174; // https://www.cambridge.org/core/journals/twin-research-and-human-genetics/article/twin-births-in-42-subsaharan-african-countries-from-1986-to-2016-frequency-trends-and-factors-of-variation/39A88B150744A794DDBF816FFA7F5950
 
-	public double median_birth_interval = 43.14; // median birth interval in SSA is 32 months, this parameter was calibrated to hit that target https://link.springer.com/article/10.1186/s40834-026-00448-w
+	public double delay_between_birth_scheduling_param = 43.14; // median birth interval in SSA is 32 months, this parameter was calibrated to hit that target https://link.springer.com/article/10.1186/s40834-026-00448-w
 
 
 	public double q1_birth_interval = 23; // q1 birth interval in SSA is 23 months https://link.springer.com/article/10.1186/s40834-026-00448-w
@@ -311,7 +311,7 @@ public class Demography {
 				int currentTime = (int) arg0.schedule.getTime();
 				int currentDay = (int) currentTime / world.params.ticks_per_day;
 				// draw the birth interval randomly using a log-normal distribution
-				double mu = Math.log(median_birth_interval);
+				double mu = Math.log(delay_between_birth_scheduling_param);
 				double sigma = (Math.log(q3_birth_interval) - Math.log(q1_birth_interval)) / 1.349;
 				double months_between_births = Math.exp(mu + sigma * arg0.random.nextGaussian());
 				// if months between births is greater than nine, minus nine months from it to represent the pregnancy duration
@@ -909,11 +909,11 @@ public class Demography {
 	}
 	
 	public double getMedian_birth_interval() {
-		return median_birth_interval;
+		return delay_between_birth_scheduling_param;
 	}
 
 	public void setMedian_birth_interval(double median_birth_interval) {
-		this.median_birth_interval = median_birth_interval;
+		this.delay_between_birth_scheduling_param = median_birth_interval;
 	}
 	public double getPtb_rr_mild_covid() {
 		return ptb_rr_mild_covid;
